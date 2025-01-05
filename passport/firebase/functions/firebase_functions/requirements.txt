@@ -1,0 +1,3 @@
+firebase-admin==latest
+google-cloud-firestore==latest
+firebase_functions~=0.1.0
