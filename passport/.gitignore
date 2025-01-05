@@ -39,6 +39,7 @@ migrate_working_dir/
 .DS_Store
 .flutter-plugins
 .flutter-plugins-dependencies/build/
+build/
 
 # Symbolication related
 app.*.symbols
