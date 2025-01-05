@@ -26,7 +26,25 @@ A Flutter application featuring Firebase Authentication for user login and signu
   ```zsh
   firebase login
   ```
-
+### **2a. Install FlutterFire CLI**
+- Install the FlutterFire CLI globally:
+  ```zsh
+  dart pub global activate flutterfire_cli
+  ```
+- Add the Dart global binary path to your `.zshrc` if needed:
+  ```zsh
+  export PATH="$PATH:$HOME/.pub-cache/bin"
+  ```
+- Reload your terminal configuration:
+  ```zsh
+  source ~/.zshrc
+  ```
+### **2b. Create a Firebase Project**
+Each teammate will need to create their own Firebase project:
+1. Go to the [Firebase Console](https://console.firebase.google.com/).
+2. Create a new project (e.g., `passport-dev`).
+3. Add the required platforms (iOS, macOS, etc.) to the project.
+  
 ### **3. Install CocoaPods (For macOS/iOS Development)**
 - Ensure CocoaPods is installed:
   ```zsh
@@ -51,13 +69,17 @@ flutter pub get
 ### **3. Configure Firebase**
 Run the `flutterfire configure` command to set up Firebase for your environment:
 ```zsh
-dart pub global activate flutterfire_cli
 flutterfire configure
 ```
 - Select your Firebase project.
 - The `firebase_options.dart` file will be generated in the `lib/` directory.
 
-### **4. Start Firebase Emulator Suite**
+### **4. Add Firebase Configuration Files**
+Ensure the required Firebase configuration files are present:
+- **iOS**: Add `GoogleService-Info.plist` to `ios/Runner/GoogleService-Info.plist`.
+- **macOS**: Add `GoogleService-Info.plist` to `macos/Runner/GoogleService-Info.plist`.
+
+### **5. Start Firebase Emulator Suite**
 To test authentication locally, start the Firebase Emulator Suite:
 ```zsh
 firebase emulators:start
@@ -94,6 +116,5 @@ passport/
 ```
 
 ---
-
 
 
