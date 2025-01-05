@@ -7,74 +7,75 @@
 *.pyc
 *.class
 *.tmp
+passport/.metadata
 
 # ==========================
 # IDE/Editor Specific
 # ==========================
-.idea/
+passport/.idea/
 *.iml
 *.ipr
 *.iws
-.vscode/
-.atom/
+passport/.vscode/
+passport/.atom/
 
 # ==========================
 # Flutter/Dart
 # ==========================
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
-.build/
-build/
+passport/.dart_tool/
+passport/.flutter-plugins
+passport/.flutter-plugins-dependencies
+passport/.packages
+passport/.pub-cache/
+passport/.pub/
+passport/.build/
+passport/build/
 
 # ==========================
 # Android
 # ==========================
-.android/
-android/app/debug/
-android/app/profile/
-android/app/release/
+passport/android/.android/
+passport/android/app/debug/
+passport/android/app/profile/
+passport/android/app/release/
 
 # ==========================
 # iOS/macOS
 # ==========================
-.ios/
-.macos/
-ios/Pods/
-ios/Podfile.lock
-ios/Runner/GoogleService-Info.plist
-ios/Flutter/.last_build_id
-macos/Pods/
-macos/Podfile.lock
-macos/Runner/GoogleService-Info.plist
-ios/Runner.xcodeproj/project.xcworkspace/
-macos/Runner.xcodeproj/project.xcworkspace/
+passport/.ios/
+passport/.macos/
+passport/ios/Pods/
+passport/ios/Podfile.lock
+passport/ios/Runner/GoogleService-Info.plist
+passport/ios/Flutter/.last_build_id
+passport/macos/Pods/
+passport/macos/Podfile.lock
+passport/macos/Runner/GoogleService-Info.plist
+passport/ios/Runner.xcodeproj/project.xcworkspace/
+passport/macos/Runner.xcodeproj/project.xcworkspace/
 
 # ==========================
 # Windows/Linux
 # ==========================
-windows/flutter/generated_plugin_registrant.*
-windows/flutter/generated_plugins.cmake
-linux/flutter/generated_plugin_registrant.*
-linux/flutter/generated_plugins.cmake
+passport/windows/flutter/generated_plugin_registrant.*
+passport/windows/flutter/generated_plugins.cmake
+passport/linux/flutter/generated_plugin_registrant.*
+passport/linux/flutter/generated_plugins.cmake
 
 # ==========================
 # Firebase
 # ==========================
-firebase/dataconnect-generated/
-firebase_options.dart
-
+passport/firebase/dataconnect-generated/
+passport/firebase_options.dart
+passport/lib/firebase_options.dart
 # ==========================
 # Symbolication/Obfuscation
 # ==========================
-app.*.symbols
-app.*.map.json
+passport/app.*.symbols
+passport/app.*.map.json
 
 # ==========================
 # Public Directory (Optional)
 # ==========================
-public/
+passport/public/
 
