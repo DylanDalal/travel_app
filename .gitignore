@@ -1,0 +1,80 @@
+# ==========================
+# General System Files
+# ==========================
+.DS_Store
+*.log
+*.swp
+*.pyc
+*.class
+*.tmp
+
+# ==========================
+# IDE/Editor Specific
+# ==========================
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.atom/
+
+# ==========================
+# Flutter/Dart
+# ==========================
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+.build/
+build/
+
+# ==========================
+# Android
+# ==========================
+.android/
+android/app/debug/
+android/app/profile/
+android/app/release/
+
+# ==========================
+# iOS/macOS
+# ==========================
+.ios/
+.macos/
+ios/Pods/
+ios/Podfile.lock
+ios/Runner/GoogleService-Info.plist
+ios/Flutter/.last_build_id
+macos/Pods/
+macos/Podfile.lock
+macos/Runner/GoogleService-Info.plist
+ios/Runner.xcodeproj/project.xcworkspace/
+macos/Runner.xcodeproj/project.xcworkspace/
+
+# ==========================
+# Windows/Linux
+# ==========================
+windows/flutter/generated_plugin_registrant.*
+windows/flutter/generated_plugins.cmake
+linux/flutter/generated_plugin_registrant.*
+linux/flutter/generated_plugins.cmake
+
+# ==========================
+# Firebase
+# ==========================
+firebase/dataconnect-generated/
+firebase_options.dart
+
+# ==========================
+# Symbolication/Obfuscation
+# ==========================
+app.*.symbols
+app.*.map.json
+
+# ==========================
+# Public Directory (Optional)
+# ==========================
+public/
+
