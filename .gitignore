@@ -53,6 +53,7 @@ passport/macos/Podfile.lock
 passport/macos/Runner/GoogleService-Info.plist
 passport/ios/Runner.xcodeproj/project.xcworkspace/
 passport/macos/Runner.xcodeproj/project.xcworkspace/
+passport/macos/Flutter/GeneratedPluginRegistrant.swift
 
 # ==========================
 # Windows/Linux

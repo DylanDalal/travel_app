@@ -12,14 +12,18 @@ dependencies:
   flutter:
     sdk: flutter
   firebase_core: ^3.8.1
-  firebase_auth: ^5.3.0 # Upgrade to a version compatible with the new firebase_core
+  firebase_auth: ^5.3.0 
   firebase_data_connect: ^0.1.2+5
   provider: ^6.0.0
+  permission_handler: ^11.3.1
+  shared_preferences: ^2.2.0
+  photo_manager: ^3.6.3
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true
