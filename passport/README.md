@@ -82,6 +82,7 @@ Ensure the required Firebase configuration files are present:
 ### **5. Start Firebase Emulator Suite**
 To test authentication locally, start the Firebase Emulator Suite:
 ```zsh
+cd firebase 
 firebase emulators:start
 ```
 - Authentication Emulator runs on `http://localhost:9099`.
