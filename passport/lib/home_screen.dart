@@ -1,13 +1,20 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:photo_manager/photo_manager.dart';
+import 'package:photo_manager/photo_manager.dart' as photo;
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  HomeScreenState createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
+  late MapboxMap mapboxMap;
+  PointAnnotationManager? pointAnnotationManager;
+  List<Location> photoLocations = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,57 +40,100 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Welcome to your home screen!'),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: fetchAndPrintPhotoMetadata,
-              child: Text('Fetch Photo Metadata'),
+      body: Column(
+        children: [
+          Expanded(
+            child: MapWidget(
+              cameraOptions: CameraOptions(
+                center: Point(coordinates: Position(0, 0)),
+                zoom: 2.0,
+              ),
+              onMapCreated: _onMapCreated,
             ),
-          ],
-        ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: fetchAndPlotPhotoMetadata,
+              child: Text('Fetch and Plot Photo Metadata'),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Future<void> fetchAndPrintPhotoMetadata() async {
-    final PermissionState state = await PhotoManager.requestPermissionExtend();
+  void _onMapCreated(MapboxMap mapboxMap) async {
+    this.mapboxMap = mapboxMap;
+    pointAnnotationManager =
+        await mapboxMap.annotations.createPointAnnotationManager();
+  }
+
+  Future<void> fetchAndPlotPhotoMetadata() async {
+    final photo.PermissionState state =
+        await photo.PhotoManager.requestPermissionExtend();
     if (!state.isAuth) {
       print('Photo access denied');
       return;
     }
 
-    List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
-      type: RequestType.image,
+    List<photo.AssetPathEntity> albums =
+        await photo.PhotoManager.getAssetPathList(
+      type: photo.RequestType.image,
     );
 
     if (albums.isNotEmpty) {
-      AssetPathEntity recentAlbum = albums[0];
-      List<AssetEntity> photos =
+      photo.AssetPathEntity recentAlbum = albums[0];
+      List<photo.AssetEntity> photosz =
           await recentAlbum.getAssetListPaged(page: 0, size: 100);
 
-      for (AssetEntity photo in photos) {
-        DateTime? creationDate = photo.createDateTime;
-        String? title = photo.title;
-        Location? location = photo.latitude != null && photo.longitude != null
-            ? Location(latitude: photo.latitude!, longitude: photo.longitude!)
-            : null;
-
-        print('Photo: ${title ?? "Unnamed"}');
-        print('Created on: $creationDate');
-        if (location != null) {
-          print(
-              'Location: Latitude ${location.latitude}, Longitude ${location.longitude}');
-        } else {
-          print('Location: Not available');
+      for (photo.AssetEntity photos in photosz) {
+        if (photos.latitude != null && photos.longitude != null) {
+          photoLocations.add(Location(
+            latitude: photos.latitude!,
+            longitude: photos.longitude!,
+          ));
         }
-        print('---');
       }
+
+      _addMarkersToMap();
     } else {
       print('No albums found.');
+    }
+  }
+
+  Future<void> _addMarkersToMap() async {
+    if (pointAnnotationManager == null || photoLocations.isEmpty) {
+      print("No annotation manager or photo locations available.");
+      return;
+    }
+
+    // Load a custom marker image
+    final ByteData bytes = await rootBundle.load('assets/custom-icon.png');
+    final Uint8List imageData = bytes.buffer.asUint8List();
+
+    for (var location in photoLocations) {
+      pointAnnotationManager?.create(
+        PointAnnotationOptions(
+          geometry: Point(
+            coordinates: Position(location.longitude, location.latitude),
+          ),
+          image: imageData,
+          iconSize: 1.5,
+        ),
+      );
+    }
+
+    if (photoLocations.isNotEmpty) {
+      mapboxMap.setCamera(
+        CameraOptions(
+          center: Point(
+            coordinates: Position(
+                photoLocations[0].longitude, photoLocations[0].latitude),
+          ),
+          zoom: 10.0,
+        ),
+      );
     }
   }
 

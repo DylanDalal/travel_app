@@ -29,7 +29,8 @@ passport/.packages
 passport/.pub-cache/
 passport/.pub/
 passport/.build/
-passport/build/
+passport/ios/build
+passport/build
 
 # ==========================
 # Android

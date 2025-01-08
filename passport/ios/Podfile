@@ -40,5 +40,11 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+
+    # Set the Mapbox token for the Mapbox-iOS-SDK
+    if target.name == 'Mapbox-iOS-SDK'
+      target.build_settings['MAPBOX_DOWNLOADS_TOKEN'] = 'sk.eyJ1IjoiY29ubm9yY2FtcDEyIiwiYSI6ImNtNW42bjJ1cDA4MGUybm9tM3cxNWdwMnUifQ.74B36OWlxmAAfrqSkA_zRA'
+    end
   end
 end
+
