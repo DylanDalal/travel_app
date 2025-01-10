@@ -14,6 +14,17 @@ https://docs.flutter.dev/get-started/install
   - Organize media for each trip stop.
   - Create a map for each trip and an accompanying video, with tools for simple editing and trip curation.
   - Add videos/pictures from uploaded media to trip video.
+  
+- **Rankings and Reviews**
+  - Rank cities based on various factors, i.e. Nightlife, Scenery.
+  - Review restaurants and excursions from trips. Look into connecting to GetYourGuide and TripAdvisor APIs to automatically load this info.
+  - If a trip was meant for, for example, independent camping and nightsky photography, maybe a person can give a brief synopsis and we can language-process that into a description. That way, when people are looking at trips for the area, they still have the recommendation, but we know that it's been cleaned and professionalized.
+  - Rank trips vs trips.
+  - Once a trip is fully complete, with reviews and photos, earn a stamp for the location?
+ 
+- **Friend System**
+  - Add friends and compare maps/stamps.
+  - Postcards?
 
 ## **User Experience and Interface Design**
 - **3D Globe Visualization**
