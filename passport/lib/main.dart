@@ -4,13 +4,13 @@ import 'firebase_options.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart'; // Create this for signup
 import 'home_screen.dart'; // A simple home screen for successful login
+import 'welcome_screen.dart';
 
 import 'package:flutter/foundation.dart'; // For kDebugMode
 import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  print('HELLLOOOOO');
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -24,10 +24,10 @@ void main() async {
 
 
   // Use Authentication Emulator in debug mode
-  if (kDebugMode) {
-    await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-    print('Connected to Firebase Auth Emulator');
-  }
+  //if (kDebugMode) {
+  //  await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+  //  print('Connected to Firebase Auth Emulator');
+  //}
 
 
   runApp(MyApp());

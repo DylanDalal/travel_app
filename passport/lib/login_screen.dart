@@ -18,7 +18,7 @@ class LoginScreen extends StatelessWidget {
       // Navigate to a home screen on successful login
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
-      // Show error message if login fails
+      // Show error message if login failsa
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Login failed: $e'),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:passport/utils/permission_utils.dart'; 
+import 'package:passport/utils/permission_utils.dart'; // Update with your app's structure
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignupScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -11,11 +12,19 @@ class SignupScreen extends StatelessWidget {
   Future<void> signUp(BuildContext context) async {
     try {
       // Create user
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-
+      if (userCredential.user != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({
+          'email': userCredential.user!.email,
+          'photos': [], // Start with an empty array for photo metadata
+        });
+      }
       // Request photo permission
       bool photoAccessGranted = await PermissionUtils.requestPhotoPermission();
       if (!photoAccessGranted) {

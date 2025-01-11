@@ -109,7 +109,7 @@ class HomeScreenState extends State<HomeScreen> {
     }
 
     // Load a custom marker image
-    final ByteData bytes = await rootBundle.load('assets/custom-icon.png');
+    final ByteData bytes = await rootBundle.load('lib/assets/pin.png');
     final Uint8List imageData = bytes.buffer.asUint8List();
 
     for (var location in photoLocations) {
@@ -119,7 +119,7 @@ class HomeScreenState extends State<HomeScreen> {
             coordinates: Position(location.longitude, location.latitude),
           ),
           image: imageData,
-          iconSize: 1.5,
+          iconSize: .05,
         ),
       );
     }
@@ -131,7 +131,7 @@ class HomeScreenState extends State<HomeScreen> {
             coordinates: Position(
                 photoLocations[0].longitude, photoLocations[0].latitude),
           ),
-          zoom: 10.0,
+          zoom: 1.0,
         ),
       );
     }
