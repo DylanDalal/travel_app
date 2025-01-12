@@ -3,6 +3,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:photo_manager/photo_manager.dart' as photo;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'home_screen.dart'; // Ensure Location is imported
 
 class MyTripsSection extends StatefulWidget {
   @override
@@ -12,6 +13,7 @@ class MyTripsSection extends StatefulWidget {
 class _MyTripsSectionState extends State<MyTripsSection> {
   late MapboxMap mapboxMap;
   List<Map<String, dynamic>> trips = [];
+  List<Location> photoLocations = []; // Define at class level
   bool isAddingNewTrip = false;
 
   @override
@@ -58,14 +60,20 @@ class _MyTripsSectionState extends State<MyTripsSection> {
 
       List<Map<String, dynamic>> photoMetadata = [];
 
-      for (photo.AssetEntity photo_entity in userPhotos) {
-        if (photo_entity.latitude != null && photo_entity.longitude != null) {
+      for (photo.AssetEntity photoEntity in userPhotos) {
+        if (photoEntity.latitude != null && photoEntity.longitude != null) {
           photoMetadata.add({
-            "latitude": photo_entity.latitude,
-            "longitude": photo_entity.longitude,
-            "timestamp": photo_entity.createDateTime.toIso8601String(),
-            "fileName": photo_entity.title ?? "Unknown",
+            "latitude": photoEntity.latitude,
+            "longitude": photoEntity.longitude,
+            "timestamp": photoEntity.createDateTime.toIso8601String(),
+            "fileName": photoEntity.title ?? "Unknown",
           });
+
+          // Update class-level photoLocations
+          photoLocations.add(Location(
+            latitude: photoEntity.latitude!,
+            longitude: photoEntity.longitude!,
+          ));
         }
       }
 
@@ -95,6 +103,48 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       print('Photo metadata saved successfully.');
     } catch (e) {
       print('Error saving photo metadata: $e');
+    }
+  }
+
+  Future<void> _saveTripToFirestore(
+    String title,
+    DateTimeRange timeframe,
+    List<Location> locations,
+  ) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print('No authenticated user.');
+      return;
+    }
+
+    try {
+      final userDoc =
+          FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+      final tripData = {
+        "id": UniqueKey().toString(),
+        "title": title,
+        "timeframe": {
+          "start": timeframe.start.toIso8601String(),
+          "end": timeframe.end.toIso8601String(),
+        },
+        "locations": locations
+            .map((loc) => {
+                  "latitude": loc.latitude,
+                  "longitude": loc.longitude,
+                  "timestamp": DateTime.now().toIso8601String(), // Placeholder
+                })
+            .toList(),
+      };
+
+      // Save trip under 'trips' field
+      await userDoc.set({
+        'trips': FieldValue.arrayUnion([tripData]),
+      }, SetOptions(merge: true));
+
+      print('Trip saved successfully.');
+    } catch (e) {
+      print('Error saving trip: $e');
     }
   }
 
@@ -206,25 +256,81 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   }
 
   Widget _buildTripCreationMenu(ScrollController scrollController) {
+    final TextEditingController titleController = TextEditingController();
+    DateTimeRange? timeframe;
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ElevatedButton(
-            onPressed: fetchAndPlotPhotoMetadata,
-            child: Text('Fetch and Plot Photo Metadata'),
+          // Title Input
+          TextField(
+            controller: titleController,
+            decoration: InputDecoration(
+              labelText: "Trip Title",
+              border: OutlineInputBorder(),
+            ),
           ),
           SizedBox(height: 10),
+
+          // Date Range Picker
           ElevatedButton(
-            onPressed: () {
-              // Add other trip creation logic here
-              print('Other trip creation logic');
+            onPressed: () async {
+              DateTimeRange? pickedRange = await showDateRangePicker(
+                context: context,
+                firstDate: DateTime(2000),
+                lastDate: DateTime.now().add(Duration(days: 365)),
+              );
+              if (pickedRange != null) {
+                setState(() {
+                  timeframe = pickedRange;
+                });
+              }
             },
-            child: Text('Other Trip Settings'),
-          ),
-        ],
+            child: Text(
+              timeframe == null
+              ? "Select Timeframe"
+              : "${timeframe!.start.toLocal()} - ${timeframe!.end.toLocal()}",
+        ),
       ),
-    );
+      SizedBox(height: 10),
+
+      // Fetch and Plot Photo Metadata Button
+      ElevatedButton(
+        onPressed: fetchAndPlotPhotoMetadata,
+        child: Text('Fetch and Plot Photo Metadata'),
+      ),
+      SizedBox(height: 10),
+
+      // Save Trip Button
+      ElevatedButton(
+        onPressed: () async {
+          if (titleController.text.isEmpty || timeframe == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Please complete all fields!")),
+            );
+            return;
+          }
+
+          // Save trip data
+          await _saveTripToFirestore(
+            titleController.text,
+            timeframe!,
+            photoLocations,
+          );
+
+          // Refresh trips list
+          await _loadTrips();
+
+          setState(() {
+            isAddingNewTrip = false; // Close the creation menu
+          });
+        },
+        child: Text('Save Trip'),
+      ),
+    ],
+  ),
+);
   }
 }

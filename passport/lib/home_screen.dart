@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:photo_manager/photo_manager.dart'
+    as photo; // Import photo_manager
 import 'my_trips_section.dart';
 import 'friends_section.dart';
 
@@ -10,6 +12,7 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  List<Location> photoLocations = []; // Declare photoLocations
 
   @override
   Widget build(BuildContext context) {
@@ -64,4 +67,49 @@ class HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, '/');
   }
+
+  Future<List<Location>> getUserPhotoData() async {
+    // Request permissions
+    final photo.PermissionState state =
+        await photo.PhotoManager.requestPermissionExtend();
+    if (!state.isAuth) {
+      print('Photo access denied');
+      return [];
+    }
+
+    // Fetch albums
+    List<photo.AssetPathEntity> albums =
+        await photo.PhotoManager.getAssetPathList(
+      type: photo.RequestType.image,
+    );
+
+    List<Location> fetchedLocations = [];
+    if (albums.isNotEmpty) {
+      photo.AssetPathEntity recentAlbum = albums[0];
+      List<photo.AssetEntity> userPhotos =
+          await recentAlbum.getAssetListPaged(page: 0, size: 100);
+
+      // Extract photo locations
+      for (photo.AssetEntity photoEntity in userPhotos) {
+        if (photoEntity.latitude != null && photoEntity.longitude != null) {
+          fetchedLocations.add(Location(
+            latitude: photoEntity.latitude!,
+            longitude: photoEntity.longitude!,
+          ));
+        }
+      }
+    } else {
+      print('No albums found.');
+    }
+
+    photoLocations = fetchedLocations; // Update class-level photoLocations
+    return fetchedLocations;
+  }
+}
+
+class Location {
+  final double latitude;
+  final double longitude;
+
+  Location({required this.latitude, required this.longitude});
 }
