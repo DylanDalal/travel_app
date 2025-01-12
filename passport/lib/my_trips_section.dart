@@ -15,6 +15,8 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   List<Map<String, dynamic>> trips = [];
   List<Location> photoLocations = []; // Define at class level
   bool isAddingNewTrip = false;
+  double currentChildSize = 0.25; // Default size for the menu bar
+
 
   @override
   void initState() {
@@ -148,7 +150,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
@@ -166,54 +168,70 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         ),
         // Draggable Scrollable Sheet
         DraggableScrollableSheet(
-          initialChildSize: isAddingNewTrip ? 0.5 : 0.25,
+          initialChildSize: currentChildSize,
           minChildSize: 0.25,
           maxChildSize: 0.75,
           builder: (BuildContext context, ScrollController scrollController) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  // Drag Bar and Title Row
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          isAddingNewTrip ? 'Create a Trip' : 'My Trips',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(isAddingNewTrip ? Icons.close : Icons.add),
-                          onPressed: () {
-                            setState(() {
-                              isAddingNewTrip = !isAddingNewTrip;
-                            });
-                          },
-                        ),
-                      ],
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  currentChildSize = currentChildSize == 0.25 ? 0.75 : 0.25;
+                });
+              },
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 300),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
                     ),
-                  ),
-                  Divider(thickness: 1, color: Colors.grey[300]),
-                  Expanded(
-                    child: isAddingNewTrip
-                        ? _buildTripCreationMenu(scrollController)
-                        : _buildTripList(scrollController),
-                  ),
-                ],
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Drag Bar and Title Row
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            isAddingNewTrip ? 'Create a Trip' : 'My Trips',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          IconButton(
+                            icon:
+                                Icon(isAddingNewTrip ? Icons.close : Icons.add),
+                            onPressed: () {
+                              setState(() {
+                                isAddingNewTrip = !isAddingNewTrip;
+                                if (isAddingNewTrip) {
+                                  currentChildSize =
+                                      0.75; // Automatically expand to 75%
+                                } else {
+                                  currentChildSize =
+                                      0.25; // Collapse back to initial size
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Divider(thickness: 1, color: Colors.grey[300]),
+                    Expanded(
+                      child: isAddingNewTrip
+                          ? _buildTripCreationMenu(scrollController)
+                          : _buildTripList(scrollController),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -255,82 +273,86 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     );
   }
 
+
   Widget _buildTripCreationMenu(ScrollController scrollController) {
     final TextEditingController titleController = TextEditingController();
     DateTimeRange? timeframe;
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Title Input
-          TextField(
-            controller: titleController,
-            decoration: InputDecoration(
-              labelText: "Trip Title",
-              border: OutlineInputBorder(),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Title Input
+            TextField(
+              controller: titleController,
+              decoration: InputDecoration(
+                labelText: "Trip Title",
+                border: OutlineInputBorder(),
+              ),
             ),
-          ),
-          SizedBox(height: 10),
+            SizedBox(height: 10),
 
-          // Date Range Picker
-          ElevatedButton(
-            onPressed: () async {
-              DateTimeRange? pickedRange = await showDateRangePicker(
-                context: context,
-                firstDate: DateTime(2000),
-                lastDate: DateTime.now().add(Duration(days: 365)),
-              );
-              if (pickedRange != null) {
+            // Date Range Picker
+            ElevatedButton(
+              onPressed: () async {
+                DateTimeRange? pickedRange = await showDateRangePicker(
+                  context: context,
+                  firstDate: DateTime(1900),
+                  lastDate: DateTime.now().add(Duration(days: 365)),
+                );
+                if (pickedRange != null) {
+                  setState(() {
+                    timeframe = pickedRange;
+                  });
+                }
+              },
+              child: Text(
+                timeframe == null
+                    ? "Select Timeframe"
+                    : "${timeframe!.start.toLocal()} - ${timeframe!.end.toLocal()}",
+              ),
+            ),
+            SizedBox(height: 10),
+
+            // Fetch and Plot Photo Metadata Button
+            ElevatedButton(
+              onPressed: fetchAndPlotPhotoMetadata,
+              child: Text('Fetch and Plot Photo Metadata'),
+            ),
+            SizedBox(height: 10),
+
+            // Save Trip Button
+            ElevatedButton(
+              onPressed: () async {
+                if (titleController.text.isEmpty || timeframe == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Please complete all fields!")),
+                  );
+                  return;
+                }
+
+                // Save trip data
+                await _saveTripToFirestore(
+                  titleController.text,
+                  timeframe!,
+                  photoLocations,
+                );
+
+                // Refresh trips list
+                await _loadTrips();
+
                 setState(() {
-                  timeframe = pickedRange;
+                  isAddingNewTrip = false; // Close the creation menu
                 });
-              }
-            },
-            child: Text(
-              timeframe == null
-              ? "Select Timeframe"
-              : "${timeframe!.start.toLocal()} - ${timeframe!.end.toLocal()}",
+              },
+              child: Text('Save Trip'),
+            ),
+          ],
         ),
       ),
-      SizedBox(height: 10),
-
-      // Fetch and Plot Photo Metadata Button
-      ElevatedButton(
-        onPressed: fetchAndPlotPhotoMetadata,
-        child: Text('Fetch and Plot Photo Metadata'),
-      ),
-      SizedBox(height: 10),
-
-      // Save Trip Button
-      ElevatedButton(
-        onPressed: () async {
-          if (titleController.text.isEmpty || timeframe == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Please complete all fields!")),
-            );
-            return;
-          }
-
-          // Save trip data
-          await _saveTripToFirestore(
-            titleController.text,
-            timeframe!,
-            photoLocations,
-          );
-
-          // Refresh trips list
-          await _loadTrips();
-
-          setState(() {
-            isAddingNewTrip = false; // Close the creation menu
-          });
-        },
-        child: Text('Save Trip'),
-      ),
-    ],
-  ),
-);
+    );
   }
+
 }
