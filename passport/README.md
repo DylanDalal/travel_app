@@ -71,7 +71,8 @@ Run the `flutterfire configure` command to set up Firebase for your environment:
 ```zsh
 flutterfire configure
 ```
-- Select your Firebase project.
+- Select your Firebase project. (I didn't make a Windows version -Dylan)
+- **android** name: com.example.app
 - The `firebase_options.dart` file will be generated in the `lib/` directory.
 
 ### **4. Add Firebase Configuration Files**
