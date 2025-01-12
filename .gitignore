@@ -81,3 +81,14 @@ passport/app.*.map.json
 # ==========================
 passport/public/
 
+passport/android/app/build.gradle
+passport/android/app/google-services.json
+passport/android/settings.gradle
+passport/firebase.json
+passport/ios/Runner.xcodeproj/project.pbxproj
+passport/android/settings.gradle
+passport/android/app/build.gradle
+passport/ios/Runner.xcodeproj/project.pbxproj
+passport/android/settings.gradle
+passport/android/app/build.gradle
+passport/ios/Runner.xcodeproj/project.pbxproj
