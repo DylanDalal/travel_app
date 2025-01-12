@@ -26,7 +26,6 @@ class WelcomeScreen extends StatelessWidget {
             Expanded(
               child: SingleChildScrollView(
                 child: Text(
-                  // Insert your actual Terms & Conditions text here
                   '1. Be excellent to each other.\n'
                   '2. Respect user data privacy.\n'
                   '3. ...',

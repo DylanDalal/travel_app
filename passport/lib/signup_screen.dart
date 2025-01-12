@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:passport/utils/permission_utils.dart'; // Update with your app's structure
+import 'package:passport/utils/permission_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignupScreen extends StatelessWidget {
@@ -12,19 +12,24 @@ class SignupScreen extends StatelessWidget {
   Future<void> signUp(BuildContext context) async {
     try {
       // Create user
-      final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+
       if (userCredential.user != null) {
+        // Initialize user in Firestore
         await FirebaseFirestore.instance
             .collection('users')
             .doc(userCredential.user!.uid)
             .set({
           'email': userCredential.user!.email,
-          'photos': [], // Start with an empty array for photo metadata
+          'photos': [], // Initialize photo metadata
+          'acceptedTerms': false, // Default to false for new users
         });
       }
+
       // Request photo permission
       bool photoAccessGranted = await PermissionUtils.requestPhotoPermission();
       if (!photoAccessGranted) {
@@ -38,8 +43,8 @@ class SignupScreen extends StatelessWidget {
         PermissionUtils.openSettingsIfNeeded();
       }
 
-      // Navigate to home screen
-      Navigator.pushReplacementNamed(context, '/home');
+      // Navigate to the WelcomeScreen
+      Navigator.pushReplacementNamed(context, '/welcome');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Signup failed: $e')),

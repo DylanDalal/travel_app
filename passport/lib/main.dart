@@ -8,6 +8,8 @@ import 'welcome_screen.dart';
 
 import 'package:flutter/foundation.dart'; // For kDebugMode
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,8 +53,13 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => LoginScreen(),
         '/signup': (context) => SignupScreen(), // Create this screen for signup
+        '/welcome': (context) => WelcomeScreen(),
         '/home': (context) => HomeScreen(), // A basic home screen
       },
     );
   }
 }
+
+
+
+
