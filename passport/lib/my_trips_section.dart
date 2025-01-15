@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,7 +6,6 @@ import 'package:photo_manager/photo_manager.dart' as photo;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
-// NEW import for formatting
 import 'package:intl/intl.dart';
 
 class MyTripsSection extends StatefulWidget {
@@ -14,21 +14,30 @@ class MyTripsSection extends StatefulWidget {
 }
 
 class _MyTripsSectionState extends State<MyTripsSection> {
-  bool isAddingNewTrip = false;
+  /// Which UI screen we’re showing
+  bool isCreatingTrip = false;
+  bool isEditingTrip = false;
+  bool isViewingTrip = false; 
+  // Instead of 'isAddingNewTrip', we now have distinct booleans.
+
   double currentChildSize = 0.25;
   DateTimeRange? timeframe;
+
+  // For trip creation/editing
   final TextEditingController titleController = TextEditingController();
 
+  // The map
   late MapboxMap mapboxMap;
-  late PointAnnotationManager pointAnnotationManager; // Declare without initializing
+  late PointAnnotationManager pointAnnotationManager;
   bool isPointAnnotationManagerInitialized = false;
+
+  // Data
   List<Map<String, dynamic>> trips = [];
   List<Location> photoLocations = [];
-  String? editingTripId;
+  String? editingTripId;      // which trip ID we’re editing
+  Map<String, dynamic>? selectedTrip;  // which trip is being viewed
 
-  bool isViewingTrip = false;
-  Map<String, dynamic>? selectedTrip;
-
+  // Selection mode
   bool isSelecting = false;
   Set<String> selectedTripIds = {};
 
@@ -57,28 +66,26 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
   }
 
-  /// Helper function to format an ISO date (e.g. 2024-04-08T00:00:00.000)
-  /// into a nice "April 08th, 2024" display.
+  /// Format "Oct. 08th, 2024" from an ISO datetime string
   String _formatDateString(String isoString) {
     try {
       DateTime dateObj = DateTime.parse(isoString);
       return _formatDate(dateObj);
     } catch (_) {
-      return isoString; // fallback if parse fails
+      return isoString; 
     }
   }
 
-  /// A helper that takes a DateTime and returns "April 08th, 2024".
-  /// We generate the correct suffix (st, nd, rd, th) based on the day number.
+  /// Abbreviated month, e.g. "Oct. 08th, 2024"
   String _formatDate(DateTime date) {
     final day = date.day;
+    final dayString = day < 10 ? '0$day' : '$day';
     final suffix = _daySuffix(day);
-    final month = DateFormat('MMMM').format(date); // e.g. April
+    final month = DateFormat('MMM').format(date) + '.'; 
     final year = date.year;
-    return '$month $day$suffix, $year';
+    return '$month $dayString$suffix, $year';
   }
 
-  /// Returns "st", "nd", "rd", or "th" depending on the day.
   String _daySuffix(int day) {
     // Special case for 11th, 12th, 13th
     if (day >= 11 && day <= 13) {
@@ -112,9 +119,9 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
 
     try {
-      // Get the list of photo albums
-      List<photo.AssetPathEntity> albums =
-          await photo.PhotoManager.getAssetPathList(type: photo.RequestType.image);
+      List<photo.AssetPathEntity> albums = await photo.PhotoManager.getAssetPathList(
+        type: photo.RequestType.image,
+      );
 
       if (albums.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -123,7 +130,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         return;
       }
 
-      // Fetch photos from the first album (e.g., Recent)
       photo.AssetPathEntity recentAlbum = albums[0];
       List<photo.AssetEntity> userPhotos =
           await recentAlbum.getAssetListPaged(page: 0, size: 100);
@@ -135,10 +141,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         return;
       }
 
-      // Clear existing photoLocations for the trip
       photoLocations.clear();
-
-      // Filter photos by timeframe and geotagged information
       DateTime start = timeframe!.start;
       DateTime end = timeframe!.end;
 
@@ -147,7 +150,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             photoEntity.longitude != null &&
             photoEntity.createDateTime.isAfter(start) &&
             photoEntity.createDateTime.isBefore(end)) {
-          // Add photo metadata to the trip's photoLocations
           photoLocations.add(Location(
             latitude: photoEntity.latitude!,
             longitude: photoEntity.longitude!,
@@ -176,8 +178,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       mapboxMap = map;
     });
 
-    // Initialize PointAnnotationManager asynchronously
-    mapboxMap.annotations.createPointAnnotationManager().then((manager) {
+    map.annotations.createPointAnnotationManager().then((manager) {
       setState(() {
         pointAnnotationManager = manager;
         isPointAnnotationManagerInitialized = true;
@@ -186,8 +187,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }).catchError((error) {
       print('Error initializing PointAnnotationManager: $error');
     });
-  });
-}
+  }
 
   Future<void> _plotLocationsOnMap() async {
     if (!isPointAnnotationManagerInitialized) {
@@ -248,25 +248,17 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             center: Point(coordinates: Position(0, 0)),
             zoom: 2.0,
           ),
-          onMapCreated: (map) {
-            setState(() {
-              mapboxMap = map;
-
-              // Initialize the annotation manager and plot locations
-              _plotLocationsOnMap();
-            });
-          },
+          onMapCreated: _onMapCreated,
         ),
         // The Draggable sheet on top
         DraggableScrollableSheet(
           initialChildSize: currentChildSize,
           minChildSize: 0.25,
-          maxChildSize: 0.5, // can go up to half-screen
+          maxChildSize: 0.5,
           builder: (BuildContext context, ScrollController scrollController) {
             return GestureDetector(
               onTap: () {
                 setState(() {
-                  // Toggle between 25% and 50%
                   currentChildSize = (currentChildSize == 0.25) ? 0.5 : 0.25;
                 });
               },
@@ -290,7 +282,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                       child: _buildTopRow(),
                     ),
                     Divider(thickness: 1, color: Colors.grey[300]),
-                    // The main content area
                     Expanded(
                       child: _buildChildContent(scrollController),
                     ),
@@ -304,19 +295,24 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     );
   }
 
-  /// Builds the top row in the Draggable sheet
   Widget _buildTopRow() {
     if (isSelecting) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Merge (disabled if <2 selected)
           TextButton(
-            onPressed: _mergeSelectedTrips,
+            onPressed: (selectedTripIds.length > 1) ? _mergeSelectedTrips : null,
             child: Text(
               "Merge",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: (selectedTripIds.length > 1) ? Colors.blue : Colors.grey,
+              ),
             ),
           ),
+          // Deselect
           TextButton(
             onPressed: () {
               setState(() {
@@ -329,9 +325,9 @@ class _MyTripsSectionState extends State<MyTripsSection> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
+          // Delete
           TextButton(
-            onPressed:
-                selectedTripIds.isNotEmpty ? _confirmDeleteSelected : null,
+            onPressed: selectedTripIds.isNotEmpty ? _confirmDeleteSelected : null,
             child: Text(
               "Delete",
               style: TextStyle(
@@ -345,7 +341,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       );
     }
 
-    // Otherwise, normal header row
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -355,7 +350,8 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         ),
         Row(
           children: [
-            if (!isAddingNewTrip && !isViewingTrip)
+            // "Select" if not editing/viewing/creating
+            if (!isEditingTrip && !isCreatingTrip && !isViewingTrip)
               TextButton(
                 onPressed: () {
                   setState(() {
@@ -365,20 +361,29 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                 },
                 child: Text("Select"),
               ),
+            // plus or close
             IconButton(
-              icon: Icon(isAddingNewTrip ? Icons.close : Icons.add),
+              icon: Icon(isCreatingTrip ? Icons.close : Icons.add),
               onPressed: () {
                 setState(() {
-                  if (isAddingNewTrip) {
+                  if (isCreatingTrip) {
+                    // if we are on "create trip" screen, close it
+                    titleController.clear();
+                    timeframe = null;
+                    photoLocations.clear();
+                    editingTripId = null;
+                    isCreatingTrip = false;
+                  } else {
+                    // open create trip screen
+                    isCreatingTrip = true;
+                    isEditingTrip = false;
+                    isViewingTrip = false;
                     titleController.clear();
                     timeframe = null;
                     photoLocations.clear();
                     editingTripId = null;
                   }
-                  isAddingNewTrip = !isAddingNewTrip;
-                  isViewingTrip = false;
-                  selectedTrip = null;
-                  currentChildSize = isAddingNewTrip ? 0.5 : 0.25;
+                  currentChildSize = isCreatingTrip ? 0.5 : 0.25;
                 });
               },
             ),
@@ -389,14 +394,17 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   }
 
   String _buildHeaderTitle() {
-    if (isAddingNewTrip) return 'Create/Edit Trip';
+    if (isEditingTrip) return 'Edit Trip';
+    if (isCreatingTrip) return 'Create Trip';
     if (isViewingTrip) return 'Trip Details';
     return 'My Trips';
   }
 
   Widget _buildChildContent(ScrollController scrollController) {
-    if (isAddingNewTrip) {
-      return _buildTripCreationMenu(scrollController);
+    if (isEditingTrip) {
+      return _buildEditTripScreen(scrollController);
+    } else if (isCreatingTrip) {
+      return _buildCreateTripScreen(scrollController);
     } else if (isViewingTrip && selectedTrip != null) {
       return _buildTripDetailView(scrollController);
     } else {
@@ -404,64 +412,10 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
   }
 
-  Widget _buildTripDetailView(ScrollController scrollController) {
-    if (selectedTrip == null) {
-      return Center(child: Text("No trip selected"));
-    }
-
-    final trip = selectedTrip!;
-    final String title = trip['title'] ?? 'Untitled Trip';
-
-    // Parse & format start and end
-    final String rawStart = trip['timeframe']?['start'] ?? '';
-    final String rawEnd = trip['timeframe']?['end'] ?? '';
-    final String formattedStart = rawStart.isEmpty ? 'Unknown' : _formatDateString(rawStart);
-    final String formattedEnd   = rawEnd.isEmpty ? 'Unknown'  : _formatDateString(rawEnd);
-
-    return SingleChildScrollView(
-      controller: scrollController,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Back button + Title
-            Row(
-              children: [
-                IconButton(
-                  icon: Icon(Icons.arrow_back),
-                  onPressed: () {
-                    setState(() {
-                      isViewingTrip = false;
-                      selectedTrip = null;
-                      currentChildSize = 0.25;
-                    });
-                  },
-                ),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            Text(
-              "Trip Dates:",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            Text("$formattedStart - $formattedEnd"),
-            SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTripCreationMenu(ScrollController scrollController) {
+  // -------------------------
+  // CREATE TRIP SCREEN
+  // -------------------------
+  Widget _buildCreateTripScreen(ScrollController scrollController) {
     return SingleChildScrollView(
       controller: scrollController,
       child: Padding(
@@ -479,7 +433,8 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: () async {
-                DateTimeRange? pickedRange = await showDateRangePicker(
+                // Standard Material date range
+                final pickedRange = await showDateRangePicker(
                   context: context,
                   firstDate: DateTime(1900),
                   lastDate: DateTime.now().add(Duration(days: 365)),
@@ -527,8 +482,11 @@ class _MyTripsSectionState extends State<MyTripsSection> {
 
                 await _loadTrips();
                 setState(() {
-                  _clearFields(); // Clear fields after saving
-                  isAddingNewTrip = false; // Close the creation menu
+                  titleController.clear();
+                  timeframe = null;
+                  photoLocations.clear();
+                  isCreatingTrip = false;
+                  currentChildSize = 0.25;
                 });
               },
               child: Text('Save Trip'),
@@ -539,7 +497,157 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     );
   }
 
-  /// The main My Trips list
+  // -------------------------
+  // EDIT TRIP SCREEN
+  // -------------------------
+  Widget _buildEditTripScreen(ScrollController scrollController) {
+    return SingleChildScrollView(
+      controller: scrollController,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: InputDecoration(
+                labelText: "Trip Title",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () async {
+                final pickedRange = await showDateRangePicker(
+                  context: context,
+                  firstDate: DateTime(1900),
+                  lastDate: DateTime.now().add(Duration(days: 365)),
+                );
+                if (pickedRange != null) {
+                  setState(() {
+                    timeframe = pickedRange;
+                  });
+                }
+              },
+              child: Text(
+                timeframe == null
+                    ? "Select Timeframe"
+                    : "${_formatDate(timeframe!.start)} - ${_formatDate(timeframe!.end)}",
+              ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: fetchAndPlotPhotoMetadata,
+              child: Text('Fetch and Plot Photo Metadata'),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () async {
+                if (titleController.text.isEmpty || timeframe == null) {
+                  String error = "Please complete all fields!\n";
+                  if (titleController.text.isEmpty) {
+                    error += " - Trip Title is empty\n";
+                  }
+                  if (timeframe == null) {
+                    error += " - Timeframe is not selected";
+                  }
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(error)),
+                  );
+                  return;
+                }
+
+                // Save updates
+                await _saveTripToFirestore(
+                  titleController.text,
+                  timeframe!,
+                  photoLocations,
+                );
+
+                await _loadTrips();
+                setState(() {
+                  titleController.clear();
+                  timeframe = null;
+                  photoLocations.clear();
+                  editingTripId = null;
+                  isEditingTrip = false;
+                  currentChildSize = 0.25;
+                });
+              },
+              child: Text('Update Trip'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // -------------------------
+  // TRIP DETAILS
+  // -------------------------
+  Widget _buildTripDetailView(ScrollController scrollController) {
+    if (selectedTrip == null) {
+      return Center(child: Text("No trip selected"));
+    }
+
+    final trip = selectedTrip!;
+    final String title = trip['title'] ?? 'Untitled Trip';
+
+    final String rawStart = trip['timeframe']?['start'] ?? '';
+    final String rawEnd = trip['timeframe']?['end'] ?? '';
+    final String formattedStart =
+        rawStart.isEmpty ? 'Unknown' : _formatDateString(rawStart);
+    final String formattedEnd =
+        rawEnd.isEmpty ? 'Unknown' : _formatDateString(rawEnd);
+
+    return SingleChildScrollView(
+      controller: scrollController,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Back button + Title
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: () {
+                    setState(() {
+                      isViewingTrip = false;
+                      selectedTrip = null;
+                      currentChildSize = 0.25;
+                    });
+                  },
+                ),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            Text(
+              "Trip Dates:",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            Text("$formattedStart - $formattedEnd"),
+            SizedBox(height: 24),
+            // Additional details if needed
+          ],
+        ),
+      ),
+    );
+  }
+
+  // -------------------------
+  // MY TRIPS LIST
+  // -------------------------
   Widget _buildTripList(ScrollController scrollController) {
     if (trips.isEmpty) {
       return ListView(
@@ -569,7 +677,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
 
         final isSelected = selectedTripIds.contains(tripId);
 
-        // Parse & format date
         final String startIso = trip['timeframe']?['start'] ?? '';
         final String endIso = trip['timeframe']?['end'] ?? '';
         final String displayDate = (startIso.isNotEmpty && endIso.isNotEmpty)
@@ -613,9 +720,9 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                       )
                     : null,
                 title: Text(trip['title'] ?? 'Untitled Trip'),
-                // Now show "start - end" in friendly format
                 subtitle: Text(displayDate),
                 onTap: () {
+                  // If in selection mode, toggle
                   if (isSelecting) {
                     setState(() {
                       if (isSelected) {
@@ -625,25 +732,32 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                       }
                     });
                   } else {
+                    // View details
                     setState(() {
                       selectedTrip = trip;
                       isViewingTrip = true;
-                      isAddingNewTrip = false;
-                      currentChildSize = 0.5; // show half screen
+                      isEditingTrip = false;
+                      isCreatingTrip = false;
+                      currentChildSize = 0.5;
                     });
                   }
                 },
-                // No trash icon - only swipe to delete
                 trailing: IconButton(
                   icon: Icon(Icons.edit),
                   onPressed: () {
+                    // Switch to Edit Trip screen
                     setState(() {
+                      // Pre-fill the fields
                       titleController.text = trip['title'] ?? '';
-                      final start = DateTime.parse(startIso);
-                      final end = DateTime.parse(endIso);
-                      timeframe = DateTimeRange(start: start, end: end);
+                      if (startIso.isNotEmpty && endIso.isNotEmpty) {
+                        final start = DateTime.parse(startIso);
+                        final end = DateTime.parse(endIso);
+                        timeframe = DateTimeRange(start: start, end: end);
+                      }
                       editingTripId = tripId;
-                      isAddingNewTrip = true;
+
+                      isEditingTrip = true;
+                      isCreatingTrip = false;
                       isViewingTrip = false;
                       currentChildSize = 0.5;
                     });
@@ -658,6 +772,9 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     );
   }
 
+  // -------------------------
+  // SWIPE TO DELETE
+  // -------------------------
   Future<bool> _confirmSwipeDelete(Map<String, dynamic> trip) async {
     final tripId = trip['id'];
     final tripTitle = trip['title'] ?? 'Untitled Trip';
@@ -668,9 +785,10 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         return AlertDialog(
           title: Text("Confirm Delete"),
           content: Text("Are you sure you want to delete the trip '$tripTitle'?"),
+          actionsAlignment: MainAxisAlignment.center,
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false), // Cancel
+              onPressed: () => Navigator.of(context).pop(false), 
               child: Text("Cancel"),
             ),
             TextButton(
@@ -721,9 +839,10 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             "Are you sure you want to delete $count selected "
             "${count == 1 ? 'trip' : 'trips'}?",
           ),
+          actionsAlignment: MainAxisAlignment.center,
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(), // Cancel
+              onPressed: () => Navigator.of(context).pop(), 
               child: Text("Cancel"),
             ),
             TextButton(
@@ -759,18 +878,177 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
   }
 
+  // -------------------------
+  // MERGE TRIPS (Cupertino style)
+  // -------------------------
   void _mergeSelectedTrips() {
-    if (selectedTripIds.isEmpty) {
+    if (selectedTripIds.length < 2) {
+      print("Need at least 2 trips to merge.");
       return;
     }
-    print("Merging the following trip IDs: $selectedTripIds");
-    // TODO: Implement merging logic
-    setState(() {
-      isSelecting = false;
-      selectedTripIds.clear();
-    });
+
+    // Find the earliest trip among selected to get default name
+    final selectedList = trips.where((t) => selectedTripIds.contains(t['id'])).toList();
+    Map<String, dynamic>? earliestTrip;
+    DateTime? earliestDate;
+
+    for (var trip in selectedList) {
+      final startStr = trip['timeframe']?['start'];
+      if (startStr != null) {
+        final startDate = DateTime.parse(startStr);
+        if (earliestDate == null || startDate.isBefore(earliestDate)) {
+          earliestDate = startDate;
+          earliestTrip = trip;
+        }
+      }
+    }
+
+    final defaultName = earliestTrip?['title'] ?? 'Merged Trip';
+    final TextEditingController mergeNameController =
+        TextEditingController(text: defaultName);
+
+    showCupertinoDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (ctx, setStateDialog) {
+            return CupertinoAlertDialog(
+              title: Text("Merge Trips", textAlign: TextAlign.center),
+              content: Column(
+                children: [
+                  SizedBox(height: 12),
+                  CupertinoTextField(
+                    controller: mergeNameController,
+                    placeholder: "New Trip Name",
+                  ),
+                ],
+              ),
+              actions: [
+                // We'll put these in a column or row to center them
+                // However, CupertinoAlertDialog typically stacks them vertically.
+                // We'll just keep them as separate actions so they're iOS-like:
+                CupertinoDialogAction(
+                  child: Text("Cancel", textAlign: TextAlign.center),
+                  onPressed: () {
+                    Navigator.of(context).pop(); 
+                  },
+                ),
+                CupertinoDialogAction(
+                  child: Text("Merge & Keep Old Trips", textAlign: TextAlign.center),
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    await _performTripMerge(
+                      mergeNameController.text,
+                      deleteOldTrips: false,
+                    );
+                  },
+                ),
+                CupertinoDialogAction(
+                  child: Text("Merge & Delete Old Trips", textAlign: TextAlign.center),
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    await _performTripMerge(
+                      mergeNameController.text,
+                      deleteOldTrips: true,
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
+  Future<void> _performTripMerge(String mergedTripName, {required bool deleteOldTrips}) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print('No authenticated user, cannot merge.');
+      return;
+    }
+
+    final selected = trips.where((trip) => selectedTripIds.contains(trip['id'])).toList();
+    if (selected.isEmpty) {
+      print("No trips to merge.");
+      return;
+    }
+
+    // Find earliest & latest
+    DateTime? earliest;
+    DateTime? latest;
+    for (var trip in selected) {
+      final startStr = trip['timeframe']?['start'];
+      final endStr = trip['timeframe']?['end'];
+      if (startStr != null && endStr != null) {
+        final startDate = DateTime.parse(startStr);
+        final endDate = DateTime.parse(endStr);
+        if (earliest == null || startDate.isBefore(earliest)) {
+          earliest = startDate;
+        }
+        if (latest == null || endDate.isAfter(latest)) {
+          latest = endDate;
+        }
+      }
+    }
+
+    // Merge data from all selected
+    Map<String, dynamic> mergedTrip = {};
+    for (var trip in selected) {
+      trip.forEach((key, value) {
+        if (key == 'id' || key == 'timeframe') return;
+        if (!mergedTrip.containsKey(key)) {
+          mergedTrip[key] = value;
+        } else {
+          if (mergedTrip[key] is List && value is List) {
+            mergedTrip[key].addAll(value);
+          } else {
+            mergedTrip[key] = value;
+          }
+        }
+      });
+    }
+
+    // Build timeframe
+    final mergedTimeframe = {
+      "start": earliest?.toIso8601String() ?? DateTime.now().toIso8601String(),
+      "end": latest?.toIso8601String() ?? DateTime.now().toIso8601String(),
+    };
+
+    // The new merged trip
+    final newTrip = {
+      "id": UniqueKey().toString(),
+      "title": mergedTripName,  // user input
+      "timeframe": mergedTimeframe,
+      ...mergedTrip,
+    };
+
+    try {
+      final userDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+      List<Map<String, dynamic>> updatedTrips;
+      if (deleteOldTrips) {
+        updatedTrips = trips.where((t) => !selectedTripIds.contains(t['id'])).toList();
+      } else {
+        updatedTrips = List.from(trips);
+      }
+      updatedTrips.add(newTrip);
+
+      await userDoc.set({'trips': updatedTrips}, SetOptions(merge: true));
+      setState(() {
+        trips = updatedTrips;
+        selectedTripIds.clear();
+        isSelecting = false;
+      });
+      print("Trip merge successful. Created trip '$mergedTripName'");
+    } catch (e) {
+      print("Error merging trips: $e");
+    }
+  }
+
+  // -------------------------
+  // CREATE / EDIT Trip in Firestore
+  // -------------------------
   Future<void> _saveTripToFirestore(
     String title,
     DateTimeRange timeframe,
@@ -782,6 +1060,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     try {
       final userDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
 
+      // If editing an existing trip
       if (editingTripId != null) {
         final updatedTrips = trips.map((trip) {
           if (trip['id'] == editingTripId) {
@@ -806,6 +1085,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
 
         await userDoc.set({'trips': updatedTrips}, SetOptions(merge: true));
       } else {
+        // Creating new trip
         final tripData = {
           "id": UniqueKey().toString(),
           "title": title,
@@ -834,6 +1114,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   }
 }
 
+// Simple class for location data
 class Location {
   final double latitude;
   final double longitude;
