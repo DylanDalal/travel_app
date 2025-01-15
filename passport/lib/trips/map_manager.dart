@@ -1,10 +1,12 @@
-// trips/map_manager.dart
+// This file encapsulates logic for initializing the map, creating annotation managers, 
+// and plotting points. Notice we call mapManager.initializeMapManager(map) from 
+// _onMapCreated in my_trips_section.dart.
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/foundation.dart' show VoidCallback;
 import 'dart:typed_data';
 
-import '../my_trips_section.dart'; 
-// or wherever "Location" is defined, if needed (or re-define that class here).
+import '../classes.dart'; 
 
 /// Simple class that manages Mapbox creation & annotation logic
 class MapManager {

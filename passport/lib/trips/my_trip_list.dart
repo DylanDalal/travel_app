@@ -1,21 +1,18 @@
-// trips/my_trip_list.dart
 import 'package:flutter/material.dart';
-import '../my_trips_section.dart';
+import 'package:intl/intl.dart';  // for DateFormat
+import '../classes.dart';        // if needed for Location
+// ... any other imports
 
 class MyTripList extends StatelessWidget {
   final List<Map<String, dynamic>> trips;
-
   final bool isSelecting;
   final Set<String> selectedTripIds;
-
-  /// Called to confirm swipe-to-delete
   final Future<bool> Function(Map<String, dynamic>) onConfirmSwipeDelete;
-
-  /// Called when the user taps a trip (to view details)
   final Function(Map<String, dynamic>) onTapTrip;
-
-  /// Called when the user taps edit
   final Function(Map<String, dynamic>) onEditTrip;
+
+  /// Callback from parent to toggle a trip’s selection
+  final Function(String tripId, bool isSelected) onToggleSelection;
 
   const MyTripList({
     Key? key,
@@ -25,6 +22,7 @@ class MyTripList extends StatelessWidget {
     required this.onConfirmSwipeDelete,
     required this.onTapTrip,
     required this.onEditTrip,
+    required this.onToggleSelection,
   }) : super(key: key);
 
   @override
@@ -49,16 +47,18 @@ class MyTripList extends StatelessWidget {
       itemBuilder: (BuildContext context, int index) {
         final trip = trips[index];
         final tripId = trip['id'] as String?;
-        if (tripId == null) {
-          return Container(); 
-        }
+        if (tripId == null) return Container();
 
         final bool isSelected = selectedTripIds.contains(tripId);
+
+        // Extract the ISO strings
         final startIso = trip['timeframe']?['start'] ?? '';
-        final endIso = trip['timeframe']?['end'] ?? '';
+        final endIso   = trip['timeframe']?['end']   ?? '';
+
+        // Convert them into something like "Jan. 15th, 2025 - Jan. 20th, 2025"
         final displayDate = (startIso.isNotEmpty && endIso.isNotEmpty)
-            ? "$startIso - $endIso"
-            : "Unknown Date";
+            ? '${_formatFriendlyDate(startIso)} - ${_formatFriendlyDate(endIso)}'
+            : 'Unknown Date';
 
         return Dismissible(
           key: ValueKey(tripId),
@@ -86,16 +86,7 @@ class MyTripList extends StatelessWidget {
                     ? Checkbox(
                         value: isSelected,
                         onChanged: (checked) {
-                          // The parent modifies selection set
-                          if (checked == true) {
-                            selectedTripIds.add(tripId);
-                          } else {
-                            selectedTripIds.remove(tripId);
-                          }
-                          // We force a rebuild by calling (context as Element).reassemble()
-                          // or some other callback. Typically you'd pass a callback
-                          // to setState at the parent. 
-                          // For simplicity, we won't handle it here. 
+                          onToggleSelection(tripId, checked ?? false);
                         },
                       )
                     : null,
@@ -103,22 +94,14 @@ class MyTripList extends StatelessWidget {
                 subtitle: Text(displayDate),
                 onTap: () {
                   if (isSelecting) {
-                    if (isSelected) {
-                      selectedTripIds.remove(tripId);
-                    } else {
-                      selectedTripIds.add(tripId);
-                    }
-                    // same note as above about forcing a rebuild
+                    onToggleSelection(tripId, !isSelected);
                   } else {
-                    // view trip details
                     onTapTrip(trip);
                   }
                 },
                 trailing: IconButton(
                   icon: Icon(Icons.edit),
-                  onPressed: () {
-                    onEditTrip(trip);
-                  },
+                  onPressed: () => onEditTrip(trip),
                 ),
               ),
               Divider(thickness: 1, color: Colors.grey[300]),
@@ -127,5 +110,40 @@ class MyTripList extends StatelessWidget {
         );
       },
     );
+  }
+
+  /// Converts an ISO8601 string (e.g. "2025-01-15T00:00:00.000")
+  /// into "Jan. 15th, 2025".
+  String _formatFriendlyDate(String isoString) {
+    if (isoString.isEmpty) return 'Unknown';
+    try {
+      final dt = DateTime.parse(isoString);
+
+      // Abbreviated month: "Jan." 
+      final shortMonth = DateFormat('MMM').format(dt) + '.'; // e.g. "Jan."
+      final day = dt.day;
+      final suffix = _daySuffix(day);     // st, nd, rd, th
+      final year = dt.year;
+      return '$shortMonth $day$suffix, $year';
+    } catch (_) {
+      return 'Invalid Date';
+    }
+  }
+
+  /// Returns "st", "nd", "rd", or "th" depending on day number.
+  String _daySuffix(int day) {
+    if (day >= 11 && day <= 13) {
+      return 'th';
+    }
+    switch (day % 10) {
+      case 1:
+        return 'st';
+      case 2:
+        return 'nd';
+      case 3:
+        return 'rd';
+      default:
+        return 'th';
+    }
   }
 }

@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import '../my_trips_section.dart';
+import '../classes.dart'; // Import Location class
 
 class CreateTripScreen extends StatelessWidget {
   final TextEditingController titleController;

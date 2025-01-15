@@ -1,7 +1,6 @@
-// A simple read-only view for a single trip’s details.
-// Will be where we do a lot of logic in the future, showing photos, reviews, etc.
-
+// trip_detail_view.dart
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // for DateFormat
 
 class TripDetailView extends StatelessWidget {
   final Map<String, dynamic> trip;
@@ -17,12 +16,18 @@ class TripDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = trip['title'] ?? 'Untitled Trip';
     final startIso = trip['timeframe']?['start'] ?? '';
-    final endIso = trip['timeframe']?['end'] ?? '';
+    final endIso   = trip['timeframe']?['end']   ?? '';
+
+    // Friendly date range
+    final dateDisplay = (startIso.isNotEmpty && endIso.isNotEmpty)
+      ? "${_formatFriendlyDate(startIso)} - ${_formatFriendlyDate(endIso)}"
+      : "Unknown Date";
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
+          // Back arrow or close
           Row(
             children: [
               IconButton(
@@ -32,10 +37,7 @@ class TripDetailView extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -45,11 +47,35 @@ class TripDetailView extends StatelessWidget {
             "Trip Dates:",
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          Text("$startIso - $endIso"), 
-          // In a real app, you'd parse & format nicely or reuse a helper
+          Text(dateDisplay),
           SizedBox(height: 24),
+          // Additional trip details if needed
         ],
       ),
     );
+  }
+
+  /// Convert ISO8601 => "Jan. 15th, 2025"
+  String _formatFriendlyDate(String iso) {
+    try {
+      final dt = DateTime.parse(iso);
+      final shortMonth = DateFormat('MMM').format(dt) + '.';
+      final day = dt.day;
+      final suffix = _daySuffix(day);
+      final year = dt.year;
+      return '$shortMonth $day$suffix, $year';
+    } catch (_) {
+      return 'Invalid Date';
+    }
+  }
+
+  String _daySuffix(int day) {
+    if (day >= 11 && day <= 13) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
   }
 }

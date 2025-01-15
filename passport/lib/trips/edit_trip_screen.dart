@@ -1,7 +1,8 @@
-// An Edit Trip form with a Split Trip button. 
-// It calls back into the parent’s _performTripSplit() to actually perform the split.
+// lib/trips/edit_trip_screen.dart
 import 'package:flutter/material.dart';
-import '../my_trips_section.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart' show VoidCallback;
+import '../classes.dart'; // For Location
 
 class EditTripScreen extends StatelessWidget {
   final TextEditingController titleController;
@@ -10,12 +11,14 @@ class EditTripScreen extends StatelessWidget {
 
   /// Called when user wants to pick a date range
   final VoidCallback onPickDateRange;
+
   /// Called when user wants to fetch & plot photos
   final VoidCallback onFetchMetadata;
+
   /// Called to actually update the trip
   final Function(String, DateTimeRange, List<Location>) onUpdateTrip;
 
-  /// Called to split the trip at a date. We pass the date to this function.
+  /// Called to split the trip at a date (we pass the chosen date to this function).
   final Future<void> Function(DateTime) onSplitDate;
 
   const EditTripScreen({
@@ -31,11 +34,17 @@ class EditTripScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Build a friendly date string (e.g. "Jan. 15th, 2025 - Jan. 20th, 2025")
+    final timeframeDisplay = (timeframe == null)
+        ? "Select Timeframe"
+        : "${_formatFriendlyDate(timeframe!.start)} - ${_formatFriendlyDate(timeframe!.end)}";
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Title field
           TextField(
             controller: titleController,
             decoration: InputDecoration(
@@ -44,36 +53,24 @@ class EditTripScreen extends StatelessWidget {
             ),
           ),
           SizedBox(height: 10),
+
+          // Pick date range
           ElevatedButton(
             onPressed: onPickDateRange,
-            child: Text(
-              timeframe == null
-                  ? "Select Timeframe"
-                  : "${_formatDate(timeframe!.start)} - ${_formatDate(timeframe!.end)}",
-            ),
+            child: Text(timeframeDisplay),
           ),
           SizedBox(height: 10),
+
+          // Fetch & Plot
           ElevatedButton(
             onPressed: onFetchMetadata,
             child: Text('Fetch and Plot Photo Metadata'),
           ),
           SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () {
-              if (titleController.text.isEmpty || timeframe == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Please fill all fields.")),
-                );
-                return;
-              }
-              onUpdateTrip(titleController.text, timeframe!, photoLocations);
-            },
-            child: Text('Update Trip'),
-          ),
-          SizedBox(height: 10),
+
+          // Split Trip first
           ElevatedButton(
             onPressed: () async {
-              // Show a single-day date picker. Default month = trip's first day:
               if (timeframe == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text("No trip timeframe set.")),
@@ -97,12 +94,43 @@ class EditTripScreen extends StatelessWidget {
             },
             child: Text('Split Trip'),
           ),
+          SizedBox(height: 10),
+
+          // Update Trip
+          ElevatedButton(
+            onPressed: () {
+              if (titleController.text.isEmpty || timeframe == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Please fill all fields.")),
+                );
+                return;
+              }
+              onUpdateTrip(titleController.text, timeframe!, photoLocations);
+            },
+            child: Text('Update Trip'),
+          ),
         ],
       ),
     );
   }
 
-  String _formatDate(DateTime date) {
-    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+  /// e.g. "Jan. 15th, 2025"
+  String _formatFriendlyDate(DateTime date) {
+    final shortMonth = DateFormat('MMM').format(date) + '.';
+    final day = date.day;
+    final suffix = _daySuffix(day);
+    final year = date.year;
+    return '$shortMonth $day$suffix, $year';
+  }
+
+  String _daySuffix(int day) {
+    // 11th, 12th, 13th => 'th'
+    if (day >= 11 && day <= 13) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
   }
 }
