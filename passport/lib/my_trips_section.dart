@@ -3,8 +3,10 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:photo_manager/photo_manager.dart' as photo;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import 'home_screen.dart'; // Ensure Location is imported
+import 'home_screen.dart';
+import 'dart:typed_data';
+import 'package:flutter/services.dart'; // For rootBundle
+
 
 class MyTripsSection extends StatefulWidget {
   @override
@@ -17,7 +19,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   DateTimeRange? timeframe;
   final TextEditingController titleController = TextEditingController();
   late MapboxMap mapboxMap;
-  late PointAnnotationManager pointAnnotationManager; // Declare without initializing
+  late PointAnnotationManager pointAnnotationManager;
   bool isPointAnnotationManagerInitialized = false;
   List<Map<String, dynamic>> trips = [];
   List<Location> photoLocations = [];
@@ -40,7 +42,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
           .get();
       final List<dynamic> tripData = userDoc.data()?['trips'] ?? [];
 
-      print('Loaded trips from Firestore: $tripData'); // Debug print for trips from Firestore
+      print('Loaded trips from Firestore: $tripData');
 
       setState(() {
         trips = tripData.map((trip) => trip as Map<String, dynamic>).toList();
@@ -49,7 +51,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       print('Error loading trips: $e');
     }
   }
-
 
   Future<void> fetchAndPlotPhotoMetadata() async {
     if (timeframe == null) {
@@ -68,7 +69,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
 
     try {
-      // Get the list of photo albums
       List<photo.AssetPathEntity> albums =
           await photo.PhotoManager.getAssetPathList(type: photo.RequestType.image);
 
@@ -80,7 +80,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         return;
       }
 
-      // Fetch photos from the first album (e.g., Recent)
       photo.AssetPathEntity recentAlbum = albums[0];
       List<photo.AssetEntity> userPhotos =
           await recentAlbum.getAssetListPaged(page: 0, size: 100);
@@ -93,10 +92,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         return;
       }
 
-      // Clear existing photoLocations for the trip
       photoLocations.clear();
-
-      // Filter photos by timeframe and geotagged information
       DateTime start = timeframe!.start;
       DateTime end = timeframe!.end;
 
@@ -105,14 +101,12 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             photoEntity.longitude != null &&
             photoEntity.createDateTime.isAfter(start) &&
             photoEntity.createDateTime.isBefore(end)) {
-          // Add photo metadata to the trip's photoLocations
           photoLocations.add(Location(
             latitude: photoEntity.latitude!,
             longitude: photoEntity.longitude!,
             timestamp: photoEntity.createDateTime.toIso8601String(),
           ));
 
-          // Output metadata to the terminal
           print("Photo: ${photoEntity.title}, "
               "Latitude: ${photoEntity.latitude}, "
               "Longitude: ${photoEntity.longitude}, "
@@ -127,6 +121,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         );
       } else {
         print("Metadata fetched successfully for this trip.");
+        _plotLocationsOnMap();
       }
     } catch (e) {
       print('Error fetching photo metadata: $e');
@@ -136,260 +131,85 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
   }
 
-void _onMapCreated(MapboxMap map) {
-  setState(() {
-    mapboxMap = map;
+  void _onMapCreated(MapboxMap map) {
+    print('onMapCreated called');
+    setState(() {
+      mapboxMap = map;
+    });
 
-    // Initialize PointAnnotationManager asynchronously
-    mapboxMap.annotations.createPointAnnotationManager().then((manager) {
+    map.annotations.createPointAnnotationManager().then((manager) {
       setState(() {
         pointAnnotationManager = manager;
         isPointAnnotationManagerInitialized = true;
         print('PointAnnotationManager initialized.');
-
-        // Call _plotLocationsOnMap only after initialization
         _plotLocationsOnMap();
       });
     }).catchError((error) {
       print('Error initializing PointAnnotationManager: $error');
     });
-  });
-}
+  }
 
-Future<void> _plotLocationsOnMap() async {
+ Future<void> _plotLocationsOnMap() async {
+  print('plotLocationsOnMap called');
   if (!isPointAnnotationManagerInitialized) {
     print('PointAnnotationManager is not initialized yet.');
     return;
   }
 
-  print('Trips data: $trips');
-
   try {
-    // Clear existing markers
     pointAnnotationManager.deleteAll();
     print('Cleared existing markers.');
 
-    // Plot locations for each trip
-    for (var trip in trips) {
-      print('Processing trip: ${trip['title']}');
+    for (var location in photoLocations) {
+      if (location.latitude == 0 || location.longitude == 0) {
+        print('Skipping invalid location: Latitude ${location.latitude}, Longitude ${location.longitude}');
+        continue;
+      }
 
-      if (trip['locations'] != null && trip['locations'].isNotEmpty) {
-        List<dynamic> locations = trip['locations'];
-        for (var location in locations) {
-          print('Processing location: $location');
+      try {
+          final ByteData bytes = await rootBundle.load('lib/assets/pin.png');
+          final Uint8List imageData = bytes.buffer.asUint8List();
 
-          if (location['latitude'] != null && location['longitude'] != null) {
-            pointAnnotationManager.create(PointAnnotationOptions(
+          pointAnnotationManager?.create(
+            PointAnnotationOptions(
               geometry: Point(
-                coordinates: Position(
-                  location['longitude'] as double,
-                  location['latitude'] as double,
-                ),
+                coordinates: Position(location.longitude, location.latitude),
               ),
-              iconSize: 1.5,
-              iconImage: "marker-icon", // Ensure marker asset is configured
-            ));
-            print('Plotted pin at Latitude: ${location['latitude']}, Longitude: ${location['longitude']}');
-          } else {
-            print('Invalid location data: $location');
-          }
-        }
-      } else {
-        print('No locations for trip: ${trip['title']}');
+              image: imageData,
+              iconSize: 0.05,
+              anchor: "bottom",
+            ),
+          );
+        print('Marker created at (${location.latitude}, ${location.longitude}).');
+      } catch (e) {
+        print('Error creating marker: $e');
       }
     }
 
+    if (photoLocations.isNotEmpty) {
+      mapboxMap.setCamera(CameraOptions(
+        center: Point(
+          coordinates: Position(
+            photoLocations.first.longitude,
+            photoLocations.first.latitude,
+          ),
+        ),
+        zoom: 1.0, // Higher zoom level
+      ));
+    }
+
+     // Force map redraw
     print('Locations plotted successfully.');
   } catch (e) {
     print('Error plotting locations: $e');
   }
+
+
+
+
+
 }
 
-Future<void> _saveTripToFirestore(
-  String title,
-  DateTimeRange timeframe,
-  List<Location> locations,
-) async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) {
-    print('No authenticated user.');
-    return;
-  }
-
-  try {
-    final userDoc =
-        FirebaseFirestore.instance.collection('users').doc(user.uid);
-
-    if (editingTripId != null) {
-      // Update existing trip
-      final updatedTrips = trips.map((trip) {
-        if (trip['id'] == editingTripId) {
-          return {
-            "id": editingTripId, // Preserve the same trip ID
-            "title": title,
-            "timeframe": {
-              "start": timeframe.start.toIso8601String(),
-              "end": timeframe.end.toIso8601String(),
-            },
-            "locations": locations
-                .map((loc) => {
-                      "latitude": loc.latitude,
-                      "longitude": loc.longitude,
-                      "timestamp": loc.timestamp,
-                    })
-                .toList(),
-          };
-        }
-        return trip; // Keep other trips unchanged
-      }).toList();
-
-      await userDoc.set({'trips': updatedTrips}, SetOptions(merge: true));
-      print('Trip updated successfully.');
-    } else {
-      // Add new trip
-      final tripData = {
-        "id": UniqueKey().toString(),
-        "title": title,
-        "timeframe": {
-          "start": timeframe.start.toIso8601String(),
-          "end": timeframe.end.toIso8601String(),
-        },
-        "locations": locations
-            .map((loc) => {
-                  "latitude": loc.latitude,
-                  "longitude": loc.longitude,
-                  "timestamp": loc.timestamp,
-                })
-            .toList(),
-      };
-
-      await userDoc.set({
-        'trips': FieldValue.arrayUnion([tripData]),
-      }, SetOptions(merge: true));
-
-      print('Trip saved successfully.');
-    }
-
-    await _loadTrips(); // Refresh trip list
-  } catch (e) {
-    print('Error saving trip: $e');
-  }
-}
-
-  Future<void> _deleteTrip(String tripId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      print('No authenticated user.');
-      return;
-    }
-
-    try {
-      final userDoc =
-          FirebaseFirestore.instance.collection('users').doc(user.uid);
-
-      final updatedTrips =
-          trips.where((trip) => trip['id'] != tripId).toList();
-
-      await userDoc.set({'trips': updatedTrips}, SetOptions(merge: true));
-
-      setState(() {
-        trips = updatedTrips;
-      });
-
-      print('Trip deleted successfully.');
-    } catch (e) {
-      print('Error deleting trip: $e');
-    }
-  }
-
-  void _clearFields() {
-    titleController.clear();
-    timeframe = null;
-    photoLocations.clear();
-    editingTripId = null;
-  }
-
-  void _confirmDeleteTrip(String tripId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text("Are you sure you want to delete this trip?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-              },
-              child: Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-                _deleteTrip(tripId); // Delete trip
-              },
-              child: Text("Delete"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildTripList(ScrollController scrollController) {
-    return ListView.builder(
-      controller: scrollController,
-      itemCount: trips.isEmpty ? 1 : trips.length,
-      itemBuilder: (BuildContext context, int index) {
-        if (trips.isEmpty) {
-          return ListTile(
-            title: Center(
-              child: Text(
-                'No trips yet. Tap the + button to start.',
-                style: TextStyle(color: Colors.grey),
-              ),
-            ),
-          );
-        }
-
-        final trip = trips[index];
-        return Column(
-          children: [
-            ListTile(
-              title: Text(trip['title'] ?? 'Untitled Trip'),
-              subtitle: Text(trip['timeframe']?['start'] ?? 'Unknown Date'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.edit),
-                    onPressed: () {
-                      setState(() {
-                        titleController.text = trip['title'] ?? '';
-                        final start = DateTime.parse(trip['timeframe']['start']);
-                        final end = DateTime.parse(trip['timeframe']['end']);
-                        timeframe = DateTimeRange(start: start, end: end);
-                        editingTripId = trip['id'];
-                        isAddingNewTrip = true;
-                        currentChildSize = 0.75;
-                      });
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () {
-                      _confirmDeleteTrip(trip['id']);
-                    },
-                  ),
-                ],
-              ),
-            ),
-            Divider(thickness: 1, color: Colors.grey[300]),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -400,14 +220,7 @@ Future<void> _saveTripToFirestore(
             center: Point(coordinates: Position(0, 0)),
             zoom: 2.0,
           ),
-          onMapCreated: (map) {
-            setState(() {
-              mapboxMap = map;
-
-              // Initialize the annotation manager and plot locations
-              _plotLocationsOnMap();
-            });
-          },
+          onMapCreated: _onMapCreated,
         ),
         DraggableScrollableSheet(
           initialChildSize: currentChildSize,
@@ -453,11 +266,13 @@ Future<void> _saveTripToFirestore(
                             onPressed: () {
                               setState(() {
                                 if (isAddingNewTrip) {
-                                  _clearFields();
+                                  titleController.clear();
+                                  timeframe = null;
+                                  photoLocations.clear();
+                                  editingTripId = null;
                                 }
                                 isAddingNewTrip = !isAddingNewTrip;
-                                currentChildSize =
-                                    isAddingNewTrip ? 0.75 : 0.25;
+                                currentChildSize = isAddingNewTrip ? 0.75 : 0.25;
                               });
                             },
                           ),
@@ -541,8 +356,10 @@ Future<void> _saveTripToFirestore(
 
                 await _loadTrips();
                 setState(() {
-                  _clearFields(); // Clear fields after saving
-                  isAddingNewTrip = false; // Close the creation menu
+                  titleController.clear();
+                  timeframe = null;
+                  photoLocations.clear();
+                  isAddingNewTrip = false;
                 });
               },
               child: Text('Save Trip'),
@@ -552,4 +369,189 @@ Future<void> _saveTripToFirestore(
       ),
     );
   }
+
+  Widget _buildTripList(ScrollController scrollController) {
+    return ListView.builder(
+      controller: scrollController,
+      itemCount: trips.isEmpty ? 1 : trips.length,
+      itemBuilder: (BuildContext context, int index) {
+        if (trips.isEmpty) {
+          return ListTile(
+            title: Center(
+              child: Text(
+                'No trips yet. Tap the + button to start.',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          );
+        }
+
+        final trip = trips[index];
+        return Column(
+          children: [
+            ListTile(
+              title: Text(trip['title'] ?? 'Untitled Trip'),
+              subtitle: Text(trip['timeframe']?['start'] ?? 'Unknown Date'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.edit),
+                    onPressed: () {
+                      setState(() {
+                        titleController.text = trip['title'] ?? '';
+                        final start = DateTime.parse(trip['timeframe']['start']);
+                        final end = DateTime.parse(trip['timeframe']['end']);
+                        timeframe = DateTimeRange(start: start, end: end);
+                        editingTripId = trip['id'];
+                        isAddingNewTrip = true;
+                        currentChildSize = 0.75;
+                      });
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      _confirmDeleteTrip(trip['id']);
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Divider(thickness: 1, color: Colors.grey[300]),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteTrip(String tripId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text("Are you sure you want to delete this trip?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteTrip(tripId);
+              },
+              child: Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteTrip(String tripId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print('No authenticated user.');
+      return;
+    }
+
+    try {
+      final userDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      final updatedTrips = trips.where((trip) => trip['id'] != tripId).toList();
+
+      await userDoc.set({'trips': updatedTrips}, SetOptions(merge: true));
+
+      setState(() {
+        trips = updatedTrips;
+      });
+
+      print('Trip deleted successfully.');
+    } catch (e) {
+      print('Error deleting trip: $e');
+    }
+  }
+
+  Future<void> _saveTripToFirestore(
+    String title,
+    DateTimeRange timeframe,
+    List<Location> locations,
+  ) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print('No authenticated user.');
+      return;
+    }
+
+    try {
+      final userDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+      if (editingTripId != null) {
+        final updatedTrips = trips.map((trip) {
+          if (trip['id'] == editingTripId) {
+            return {
+              "id": editingTripId,
+              "title": title,
+              "timeframe": {
+                "start": timeframe.start.toIso8601String(),
+                "end": timeframe.end.toIso8601String(),
+              },
+              "locations": locations
+                  .map((loc) => {
+                        "latitude": loc.latitude,
+                        "longitude": loc.longitude,
+                        "timestamp": loc.timestamp,
+                      })
+                  .toList(),
+            };
+          }
+          return trip;
+        }).toList();
+
+        await userDoc.set({'trips': updatedTrips}, SetOptions(merge: true));
+        print('Trip updated successfully.');
+      } else {
+        final tripData = {
+          "id": UniqueKey().toString(),
+          "title": title,
+          "timeframe": {
+            "start": timeframe.start.toIso8601String(),
+            "end": timeframe.end.toIso8601String(),
+          },
+          "locations": locations
+              .map((loc) => {
+                    "latitude": loc.latitude,
+                    "longitude": loc.longitude,
+                    "timestamp": loc.timestamp,
+                  })
+              .toList(),
+        };
+
+        await userDoc.set({
+          'trips': FieldValue.arrayUnion([tripData]),
+        }, SetOptions(merge: true));
+
+        print('Trip saved successfully.');
+      }
+
+      await _loadTrips();
+    } catch (e) {
+      print('Error saving trip: $e');
+    }
+  }
+}
+
+class Location {
+  final double latitude;
+  final double longitude;
+  final String timestamp;
+
+  Location({
+    required this.latitude,
+    required this.longitude,
+    required this.timestamp,
+  });
 }
