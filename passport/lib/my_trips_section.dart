@@ -5,23 +5,21 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'classes.dart';
-import 'home_screen.dart';
-import 'dart:typed_data';
-import 'package:flutter/services.dart'; // For rootBundle
-
 // For the map:
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:photo_manager/photo_manager.dart' as photo;
+import 'dart:typed_data';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-// Trip Edit Functionality
+// Our new modules (adjust paths as needed)
 import 'trips/map_manager.dart';
 import 'trips/trip_operations.dart';
 import 'trips/create_trip_screen.dart';
 import 'trips/edit_trip_screen.dart';
 import 'trips/trip_detail_view.dart';
 import 'trips/my_trip_list.dart';
+import 'classes.dart'; // For the Location class, etc.
 
 class MyTripsSection extends StatefulWidget {
   @override
@@ -49,11 +47,8 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   bool isSelecting = false;
   Set<String> selectedTripIds = {};
 
-  // Map handling
+  // Map
   late MapManager mapManager;
-  late MapboxMap mapboxMap;
-  late PointAnnotationManager pointAnnotationManager;
-  bool isPointAnnotationManagerInitialized = false;
 
   @override
   void initState() {
@@ -76,6 +71,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       final userDoc =
           await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       final List<dynamic> tripData = userDoc.data()?['trips'] ?? [];
+
       setState(() {
         trips = tripData.map((t) => t as Map<String, dynamic>).toList();
       });
@@ -88,86 +84,10 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   // MAP
   // ---------------------
   void _onMapCreated(MapboxMap map) {
-    // Initialize our map manager (if using that approach)
     mapManager.initializeMapManager(map);
-
-    // Also store references to map and annotation manager
-    print('onMapCreated called');
-    setState(() {
-      mapboxMap = map;
-    });
-
-    // Create point annotation manager
-    map.annotations.createPointAnnotationManager().then((manager) {
-      setState(() {
-        pointAnnotationManager = manager;
-        isPointAnnotationManagerInitialized = true;
-        print('PointAnnotationManager initialized.');
-        _plotLocationsOnMap();
-      });
-    }).catchError((error) {
-      print('Error initializing PointAnnotationManager: $error');
-    });
   }
 
-  /// Actually plots photoLocations on the map
-  Future<void> _plotLocationsOnMap() async {
-    print('plotLocationsOnMap called');
-    if (!isPointAnnotationManagerInitialized) {
-      print('PointAnnotationManager is not initialized yet.');
-      return;
-    }
-
-    try {
-      pointAnnotationManager.deleteAll();
-      print('Cleared existing markers.');
-
-      for (var location in photoLocations) {
-        if (location.latitude == 0 || location.longitude == 0) {
-          print('Skipping invalid location: Latitude ${location.latitude}, Longitude ${location.longitude}');
-          continue;
-        }
-
-        try {
-          final ByteData bytes = await rootBundle.load('lib/assets/pin.png');
-          final Uint8List imageData = bytes.buffer.asUint8List();
-
-          pointAnnotationManager.create(
-            PointAnnotationOptions(
-              geometry: Point(
-                coordinates: Position(location.longitude, location.latitude),
-              ),
-              image: imageData,
-              iconSize: 0.05,
-            ),
-          );
-          print('Marker created at (${location.latitude}, ${location.longitude}).');
-        } catch (e) {
-          print('Error creating marker: $e');
-        }
-      }
-
-      if (photoLocations.isNotEmpty) {
-        mapboxMap.setCamera(
-          CameraOptions(
-            center: Point(
-              coordinates: Position(
-                photoLocations.first.longitude,
-                photoLocations.first.latitude,
-              ),
-            ),
-            zoom: 1.0,
-          ),
-        );
-      }
-
-      print('Locations plotted successfully.');
-    } catch (e) {
-      print('Error plotting locations: $e');
-    }
-  }
-
-  // Fetch photos in the timeframe, then plot them
+  // EX: fetch photos, pass them to mapManager
   Future<void> fetchAndPlotPhotoMetadata() async {
     if (timeframe == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -183,9 +103,9 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
 
     try {
-      List<photo.AssetPathEntity> albums =
-          await photo.PhotoManager.getAssetPathList(type: photo.RequestType.image);
-
+      List<photo.AssetPathEntity> albums = await photo.PhotoManager.getAssetPathList(
+        type: photo.RequestType.image,
+      );
       if (albums.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('No photo albums found.')),
@@ -205,8 +125,8 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       }
 
       photoLocations.clear();
-      DateTime start = timeframe!.start;
-      DateTime end = timeframe!.end;
+      final start = timeframe!.start;
+      final end = timeframe!.end;
 
       for (photo.AssetEntity photoEntity in userPhotos) {
         if (photoEntity.latitude != null &&
@@ -226,8 +146,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
           SnackBar(content: Text('No photos found in the selected timeframe.')),
         );
       } else {
-        // Now that we have them, actually plot on the map
-        _plotLocationsOnMap();
+        mapManager.plotLocationsOnMap(photoLocations);
       }
     } catch (e) {
       print('Error fetching photo metadata: $e');
@@ -309,9 +228,10 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       return;
     }
 
-    // Example: might show a Cupertino dialog asking for merged name,
-    // then call _performTripMerge( userTitle, deleteOldTrips )
-    _performTripMerge("Merged Trip", false);
+    // We'll pick a default name based on earliest trip, etc.
+    // Then show a Cupertino dialog to gather a final name
+    // After user chooses "Merge & Keep" or "Merge & Delete," we call below:
+    _performTripMerge( /* userTitle */ "Merged Trip", /* deleteOldTrips */ false);
   }
 
   Future<void> _performTripMerge(String mergedTripName, bool deleteOldTrips) async {
@@ -469,7 +389,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // The Map widget
+        // The map
         MapWidget(
           cameraOptions: CameraOptions(
             center: Point(coordinates: Position(0, 0)),
@@ -477,7 +397,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
           ),
           onMapCreated: _onMapCreated,
         ),
-        // Draggable Sheet
+        // Draggable sheet
         DraggableScrollableSheet(
           initialChildSize: currentChildSize,
           minChildSize: 0.25,
@@ -503,7 +423,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                 ),
                 child: Column(
                   children: [
-                    // The top row
+                    // The top row (with Select / Merge / X or +)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: _buildTopRow(),
@@ -523,14 +443,14 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   }
 
   Widget _buildTopRow() {
-    // If in selection mode, show "Merge / Deselect / Delete"
+    // If in selection mode, show the "Merge / Deselect / Delete" row
     if (isSelecting) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Merge (grayed out if < 2)
+          // Merge button (grayed out if <2 selected)
           TextButton(
-            onPressed: (selectedTripIds.length > 1) ? _mergeSelectedTrips : null,
+            onPressed: selectedTripIds.length > 1 ? _mergeSelectedTrips : null,
             child: Text(
               "Merge",
               style: TextStyle(
@@ -548,10 +468,8 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                 selectedTripIds.clear();
               });
             },
-            child: Text(
-              "Deselect",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+            child: Text("Deselect",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
           // Delete
           TextButton(
@@ -591,7 +509,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                 child: Text("Select"),
               ),
 
-            // If editing or creating, show X; else show +
+            // If we are editing or creating, show an X to close. Otherwise, show +.
             if (isEditingTrip || isCreatingTrip)
               IconButton(
                 icon: Icon(Icons.close),
@@ -695,6 +613,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
           });
         },
         onEditTrip: (trip) {
+          // Pre-fill
           final title = trip['title'] ?? '';
           final startIso = trip['timeframe']?['start'] ?? '';
           final endIso   = trip['timeframe']?['end']   ?? '';
@@ -713,6 +632,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
           });
         },
         onToggleSelection: (tripId, checked) {
+          // Called from MyTripList to toggle selection
           setState(() {
             if (checked) {
               selectedTripIds.add(tripId);
