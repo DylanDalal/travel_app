@@ -1,3 +1,4 @@
+import 'classes.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
@@ -1244,17 +1245,4 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       print('Error saving trip: $e');
     }
   }
-}
-
-/// A simple class for location data
-class Location {
-  final double latitude;
-  final double longitude;
-  final String timestamp;
-
-  Location({
-    required this.latitude,
-    required this.longitude,
-    required this.timestamp,
-  });
 }
