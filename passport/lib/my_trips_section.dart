@@ -177,7 +177,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
               ),
               image: imageData,
               iconSize: 0.05,
-              anchor: "bottom",
             ),
           );
         print('Marker created at (${location.latitude}, ${location.longitude}).');
