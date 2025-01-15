@@ -1,9 +1,10 @@
-  import 'package:flutter/material.dart';
-  import 'package:firebase_auth/firebase_auth.dart';
-  import 'package:photo_manager/photo_manager.dart'
-      as photo; // Import photo_manager
-  import 'my_trips_section.dart';
-  import 'friends_section.dart';
+import 'classes.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:photo_manager/photo_manager.dart'
+    as photo; // Import photo_manager
+import 'my_trips_section.dart';
+import 'friends_section.dart';
 
   class HomeScreen extends StatefulWidget {
     @override
@@ -106,16 +107,4 @@
       photoLocations = fetchedLocations; // Update class-level photoLocations
       return fetchedLocations;
     }
-  }
-
-  class Location {
-    final double latitude;
-    final double longitude;
-    final String timestamp; 
-
-    Location({
-      required this.latitude,
-      required this.longitude,
-      required this.timestamp, 
-    });
   }
