@@ -1,39 +1,50 @@
+import 'dart:math'; // For generating random strings
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'data_operations.dart';
-import 'package:flutter/material.dart';
-import '../classes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'data_operations.dart';
+import '../classes.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  // Create a test user and get their user ID
-  final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-    email: "devdev@dev.com",
-    password: "tester1",
+  // Generate a random email
+  final random = Random();
+  final randomString = String.fromCharCodes(
+    List.generate(8, (index) => random.nextInt(26) + 97), // Generates 8 random lowercase letters
   );
-  final testUserId = userCredential.user?.uid; // Extract the UID
+  final email = "$randomString@dev.com";
+  final password = "testPassword123"; // Use a fixed password for simplicity
 
-  if (testUserId == null) {
-    print("Failed to retrieve user ID.");
-    return;
+  try {
+    // Create a test user and get their user ID
+    final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    final testUserId = userCredential.user?.uid;
+
+    if (testUserId == null) {
+      print("Failed to retrieve user ID.");
+      return;
+    }
+
+    final DateTimeRange testTimeframe = DateTimeRange(
+      start: DateTime.now().subtract(Duration(days: 30)),
+      end: DateTime.now(),
+    );
+
+    print('Starting tests...');
+    print('Using email: $email');
+    await testPhotoManager();
+    await testDataSaver(testUserId);
+    await testDataFetcher(testUserId, testTimeframe);
+    print('Tests completed.');
+  } catch (e) {
+    print('Error during authentication: $e');
   }
-
-  final DateTimeRange testTimeframe = DateTimeRange(
-    start: DateTime.now().subtract(Duration(days: 30)),
-    end: DateTime.now(),
-  );
-
-  print('Starting tests...');
-  await testPhotoManager();
-  await testDataSaver(testUserId); // Pass the extracted UID
-  await testDataFetcher(testUserId, testTimeframe); // Pass the extracted UID
-  print('Tests completed.');
 }
-
 
 Future<void> testPhotoManager() async {
   print('Testing PhotoManager...');
