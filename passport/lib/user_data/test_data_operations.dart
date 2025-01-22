@@ -1,3 +1,12 @@
+/*
+
+      Testing suite for data operations
+      Generates random email for use in firebase
+
+*/
+
+
+
 import 'dart:math'; // For generating random strings
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -15,7 +24,7 @@ Future<void> main() async {
     List.generate(8, (index) => random.nextInt(26) + 97), // Generates 8 random lowercase letters
   );
   final email = "$randomString@dev.com";
-  final password = "testPassword123"; // Use a fixed password for simplicity
+  final password = "tester1"; 
 
   try {
     // Create a test user and get their user ID
@@ -31,7 +40,7 @@ Future<void> main() async {
     }
 
     final DateTimeRange testTimeframe = DateTimeRange(
-      start: DateTime.now().subtract(Duration(days: 30)),
+      start: DateTime.now().subtract(Duration(days: 30000)),
       end: DateTime.now(),
     );
 

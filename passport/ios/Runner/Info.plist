@@ -42,9 +42,10 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need access to your photos to allow you to upload them.</string>
+	<string>We need access to your photos to map your journeys.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>We need access to save photos to your library.</string>
+	<string>We need permission to add trip photos.</string>
+
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

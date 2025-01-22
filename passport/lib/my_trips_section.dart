@@ -22,6 +22,10 @@ import 'trips/my_trip_list.dart';
 import 'classes.dart'; // For the Location class, etc.
 
 class MyTripsSection extends StatefulWidget {
+  final MapManager mapManager;
+
+  MyTripsSection({required this.mapManager});
+
   @override
   _MyTripsSectionState createState() => _MyTripsSectionState();
 }
@@ -50,14 +54,9 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   // Map
   late MapManager mapManager;
 
-  @override
+ @override
   void initState() {
     super.initState();
-    _loadTrips();
-    // Set up the map manager
-    mapManager = MapManager(onPlotComplete: () {
-      print('Plot complete');
-    });
   }
 
   // ---------------------
@@ -84,7 +83,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   // MAP
   // ---------------------
   void _onMapCreated(MapboxMap map) {
-    mapManager.initializeMapManager(map);
+    widget.mapManager.initializeMapManager(map);
   }
 
   // EX: fetch photos, pass them to mapManager
@@ -146,7 +145,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
           SnackBar(content: Text('No photos found in the selected timeframe.')),
         );
       } else {
-        mapManager.plotLocationsOnMap(photoLocations);
+        widget.mapManager.plotLocationsOnMap(photoLocations);
       }
     } catch (e) {
       print('Error fetching photo metadata: $e');
