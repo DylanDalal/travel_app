@@ -86,7 +86,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     widget.mapManager.initializeMapManager(map);
   }
 
-  // EX: fetch photos, pass them to mapManager
   Future<void> fetchAndPlotPhotoMetadata() async {
     if (timeframe == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -137,8 +136,17 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             longitude: photoEntity.longitude!,
             timestamp: photoEntity.createDateTime.toIso8601String(),
           ));
+
+          print('Photo Metadata:');
+          print('  File Name: ${photoEntity.title}');
+          print('  Latitude: ${photoEntity.latitude}');
+          print('  Longitude: ${photoEntity.longitude}');
+          print('  Created At: ${photoEntity.createDateTime}');
+          print('  Modified At: ${photoEntity.modifiedDateTime}');
+          print('  Asset ID: ${photoEntity.id}');
         }
-      }
+    }
+
 
       if (photoLocations.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
