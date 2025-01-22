@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:passport/user_data/data_operations.dart'; // Include DataSaver
-import 'package:passport/utils/permission_utils.dart';
 
 class SignupScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
