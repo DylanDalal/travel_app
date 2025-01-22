@@ -1,6 +1,5 @@
 // lib/my_trips_section.dart
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,9 +7,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 // For the map:
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:photo_manager/photo_manager.dart' as photo;
-import 'dart:typed_data';
-import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 
 // Our new modules (adjust paths as needed)
 import 'trips/map_manager.dart';
