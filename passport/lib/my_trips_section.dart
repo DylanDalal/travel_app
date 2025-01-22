@@ -50,9 +50,10 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   // Map
   late MapManager mapManager;
 
- @override
+@override
   void initState() {
     super.initState();
+    _loadTrips(); // Load trips from Firestore
   }
 
   // ---------------------
