@@ -14,14 +14,17 @@ class MapManager {
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
 
-  /// Callback for any post-plot logic
+  //variables for checking status of various items
   final VoidCallback onPlotComplete;
   Timer? _rotationTimer;
   Timer? _interactionTimer;
   bool _userInteracted = false;
+  bool _viewingTrip = false;
   double _rotationAngle = 0.0;
-  CameraState? _lastCameraState;
+  CameraState? _lastCameraState; //state of camera after user interaction
+  double _previousZoomLevel = 1.5;
 
+/// Callback for any post-plot logic
   MapManager({required this.onPlotComplete});
 
   /// Called once MapWidget is created
@@ -37,6 +40,14 @@ class MapManager {
       _isInitialized = true;
       print("MapManager initialized successfully.");
 
+      //Style options
+
+       // Disable the compass and scale bar
+      _mapboxMap.compass.updateSettings(CompassSettings(enabled: false));
+      _mapboxMap.logo.updateSettings(LogoSettings(enabled: false));
+      _mapboxMap.scaleBar.updateSettings(ScaleBarSettings(enabled: false));
+
+
       // Start rotating the globe
       _startRotatingGlobe();
 
@@ -48,24 +59,27 @@ class MapManager {
     }).catchError((err) => print("Error creating manager: $err"));
   }
 
-  void _startRotatingGlobe() async {
+void _startRotatingGlobe() async {
+    if (_viewingTrip) {
+      print("Currently viewing a trip. Rotation disabled.");
+      return;
+    }
+
     _rotationTimer?.cancel(); // Cancel any previous timers
     _lastCameraState = await _mapboxMap.getCameraState();
 
-    // Extract the initial camera position
     double initialLongitude =
         (_lastCameraState?.center?.coordinates.lng ?? 0.0).toDouble();
     double initialLatitude =
         (_lastCameraState?.center?.coordinates.lat ?? 0.0).toDouble();
-    double initialZoom =
-        _lastCameraState!.zoom;
+    double initialZoom = _lastCameraState?.zoom ?? 2.0;
 
     double rotationSpeed = 0.15; // Adjust rotation speed
 
     _rotationTimer = Timer.periodic(Duration(milliseconds: 100), (timer) async {
-      if (_userInteracted) {
+      if (_userInteracted || _viewingTrip) {
         timer.cancel();
-        print("User interacted, stopping globe rotation.");
+        print("User interacted or viewing trip, stopping rotation.");
         return;
       }
 
@@ -78,7 +92,6 @@ class MapManager {
               initialLatitude;
       double currentZoom = _lastCameraState?.zoom ?? initialZoom;
 
-
       double newLongitude = currentLongitude + rotationSpeed;
       if (newLongitude > 180) newLongitude -= 360; // Wrap around the globe
 
@@ -88,28 +101,45 @@ class MapManager {
           zoom: currentZoom, // Keep zoom level fixed to view the whole globe
         ),
       );
-
     });
 
     print("Globe rotation started.");
   }
 
-  /// Handles user interaction to stop the rotation and start resume timer
-  void _handleUserInteraction() async {
+  void _handleUserInteraction() {
+    if (_viewingTrip) return; // Don't stop rotation if viewing trip
+
     _userInteracted = true;
     _rotationTimer?.cancel();
     print("User interaction detected. Stopping rotation.");
 
-    // Save current camera state
-    var cameraState = await _mapboxMap.getCameraState();
-    _lastCameraState = cameraState;
-
     _interactionTimer?.cancel();
     _interactionTimer = Timer(Duration(seconds: 5), () {
-      print("Resuming globe rotation after inactivity.");
-      _userInteracted = false;
-      _startRotatingGlobe();
+      if (!_viewingTrip) {
+        print("Resuming globe rotation after inactivity.");
+        _userInteracted = false;
+        _startRotatingGlobe();
+      }
     });
+  }
+
+
+void setViewingTrip(bool isViewing) {
+    _viewingTrip = isViewing;
+    if (_viewingTrip) {
+      print("Viewing trip, stopping auto-rotation.");
+      _rotationTimer?.cancel();
+    } else {
+      print("Exited trip view, resuming auto-rotation.");
+      _startRotatingGlobe();
+    }
+  }
+
+  void resumeAutoRotation() {
+    if (!_userInteracted && !_viewingTrip) {
+      print("Resuming auto-rotation.");
+      _startRotatingGlobe();
+    }
   }
 
   /// Plot a list of photo locations
@@ -163,4 +193,50 @@ class MapManager {
       print("Error plotting locations: $e");
     }
   }
+
+
+
+  Future<void> flyToLocation(double latitude, double longitude) async {
+    if (!_isInitialized) {
+      print("MapManager not initialized yet.");
+      return;
+    }
+
+    // Store the current zoom level before zooming in
+    _previousZoomLevel = _lastCameraState?.zoom ?? 1.5;
+
+    print("Flying to location: Lat $latitude, Lon $longitude");
+    _viewingTrip = true;
+
+    await _mapboxMap.flyTo(
+      CameraOptions(
+        center: Point(coordinates: Position(longitude, latitude)),
+        zoom: 8.0, // Zoom in for closer view
+        pitch: 45.0,
+      ),
+      MapAnimationOptions(duration: 3000, startDelay: 0),
+    );
+  }
+
+  // New function to zoom back out after exiting trip view
+  Future<void> zoomBackOut() async {
+    if (!_isInitialized) {
+      print("MapManager not initialized yet.");
+      return;
+    }
+
+    print("Zooming back out to previous zoom level: $_previousZoomLevel");
+    _viewingTrip = false;
+
+    await _mapboxMap.flyTo(
+      CameraOptions(
+        zoom: _previousZoomLevel, // Restore previous zoom level
+        pitch: 0.0, // Reset tilt
+      ),
+      MapAnimationOptions(duration: 2000, startDelay: 0),
+    );
+
+    _startRotatingGlobe();
+  }
+
 }

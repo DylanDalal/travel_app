@@ -598,7 +598,10 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             selectedTrip = null;
             currentChildSize = 0.25;
           });
+          widget.mapManager.zoomBackOut();
+          widget.mapManager.setViewingTrip(false);
         },
+
       );
     } else {
       // Show the main MyTripList
@@ -615,7 +618,19 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             isCreatingTrip = false;
             currentChildSize = 0.5;
           });
+
+          widget.mapManager.setViewingTrip(false);
+
+          // Move the camera to the first location of the selected trip
+          if (trip['locations'] != null && trip['locations'].isNotEmpty) {
+            final firstLocation = trip['locations'][0];
+            widget.mapManager.flyToLocation(
+              firstLocation['latitude'],
+              firstLocation['longitude'],
+            );
+          }
         },
+
         onEditTrip: (trip) {
           // Pre-fill
           final title = trip['title'] ?? '';
