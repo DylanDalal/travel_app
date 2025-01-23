@@ -57,6 +57,8 @@ class MapManager {
         (_lastCameraState?.center?.coordinates.lng ?? 0.0).toDouble();
     double initialLatitude =
         (_lastCameraState?.center?.coordinates.lat ?? 0.0).toDouble();
+    double initialZoom =
+        _lastCameraState!.zoom;
 
     double rotationSpeed = 0.15; // Adjust rotation speed
 
@@ -74,6 +76,8 @@ class MapManager {
       double currentLatitude =
           _lastCameraState?.center?.coordinates.lat.toDouble() ??
               initialLatitude;
+      double currentZoom = _lastCameraState?.zoom ?? initialZoom;
+
 
       double newLongitude = currentLongitude + rotationSpeed;
       if (newLongitude > 180) newLongitude -= 360; // Wrap around the globe
@@ -81,7 +85,7 @@ class MapManager {
       _mapboxMap.setCamera(
         CameraOptions(
           center: Point(coordinates: Position(newLongitude, currentLatitude)),
-          zoom: 1.5, // Keep zoom level fixed to view the whole globe
+          zoom: currentZoom, // Keep zoom level fixed to view the whole globe
         ),
       );
 
