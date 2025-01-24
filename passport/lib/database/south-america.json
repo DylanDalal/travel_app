@@ -1,0 +1,1237 @@
+[
+  {
+    "name": "Iquitos",
+    "latitude": -3.749365,
+    "longitude": -73.2444145
+  },
+  {
+    "name": "Sao Paulo",
+    "latitude": -23.5506507,
+    "longitude": -46.6333824
+  },
+  {
+    "name": "Brasilia",
+    "latitude": -15.7934036,
+    "longitude": -47.8823172
+  },
+  {
+    "name": "Rio de Janeiro",
+    "latitude": -22.9110137,
+    "longitude": -43.2093727
+  },
+  {
+    "name": "Santiago",
+    "latitude": -33.4377756,
+    "longitude": -70.6504502
+  },
+  {
+    "name": "La Serena",
+    "latitude": -29.902631,
+    "longitude": -71.2520253
+  },
+  {
+    "name": "Talca",
+    "latitude": -35.4265343,
+    "longitude": -71.6660322
+  },
+  {
+    "name": "Oranjestad",
+    "latitude": 12.5201024,
+    "longitude": -70.0371329
+  },
+  {
+    "name": "Willemstad",
+    "latitude": 12.1066695,
+    "longitude": -68.9351307
+  },
+  {
+    "name": "Kralendijk",
+    "latitude": 12.1472869,
+    "longitude": -68.2740206
+  },
+  {
+    "name": "Quito",
+    "latitude": -0.2201641,
+    "longitude": -78.5123274
+  },
+  {
+    "name": "Puno",
+    "latitude": -15.8405962,
+    "longitude": -70.0279512
+  },
+  {
+    "name": "Cuzco",
+    "latitude": -13.5170887,
+    "longitude": -71.9785356
+  },
+  {
+    "name": "Buenos Aires",
+    "latitude": -34.6083696,
+    "longitude": -58.4440583
+  },
+  {
+    "name": "Puerto Montt",
+    "latitude": -41.471798,
+    "longitude": -72.9395915
+  },
+  {
+    "name": "Florianopolis",
+    "latitude": -27.5973002,
+    "longitude": -48.5496098
+  },
+  {
+    "name": "Sao Luis",
+    "latitude": -2.5295265,
+    "longitude": -44.2963942
+  },
+  {
+    "name": "Ancud",
+    "latitude": -41.8682162,
+    "longitude": -73.8287225
+  },
+  {
+    "name": "Punta Arenas",
+    "latitude": -53.1625688,
+    "longitude": -70.907822
+  },
+  {
+    "name": "Manaus",
+    "latitude": -3.1316333,
+    "longitude": -59.9825041
+  },
+  {
+    "name": "Mar del Plata",
+    "latitude": -37.9976168,
+    "longitude": -57.5482079
+  },
+  {
+    "name": "Mendoza",
+    "latitude": -32.8894155,
+    "longitude": -68.8446177
+  },
+  {
+    "name": "Neuquen",
+    "latitude": -38.9519679,
+    "longitude": -68.0591741
+  },
+  {
+    "name": "Posadas",
+    "latitude": -27.3664824,
+    "longitude": -55.894295
+  },
+  {
+    "name": "Puerto Deseado",
+    "latitude": -47.7516166,
+    "longitude": -65.9013234
+  },
+  {
+    "name": "Puerto Iguazu",
+    "latitude": -25.6107508,
+    "longitude": -54.5764199
+  },
+  {
+    "name": "Quilmes",
+    "latitude": -34.7303025,
+    "longitude": -58.268868
+  },
+  {
+    "name": "Rawson",
+    "latitude": -43.2995252,
+    "longitude": -65.1055636
+  },
+  {
+    "name": "Rio Gallegos",
+    "latitude": -51.6215268,
+    "longitude": -69.2150374
+  },
+  {
+    "name": "Rio Grande",
+    "latitude": -53.7858275,
+    "longitude": -67.7018562
+  },
+  {
+    "name": "Rosario",
+    "latitude": -32.9593609,
+    "longitude": -60.6617024
+  },
+  {
+    "name": "Rufino",
+    "latitude": -34.2617313,
+    "longitude": -62.7110819
+  },
+  {
+    "name": "Salta",
+    "latitude": -24.7892946,
+    "longitude": -65.4103194
+  },
+  {
+    "name": "San Carlos de Bariloche",
+    "latitude": -41.1334781,
+    "longitude": -71.3101474
+  },
+  {
+    "name": "San Juan",
+    "latitude": -31.5370909,
+    "longitude": -68.5251802
+  },
+  {
+    "name": "San Miguel de Tucuman",
+    "latitude": -26.8303703,
+    "longitude": -65.2038133
+  },
+  {
+    "name": "Santa Fe",
+    "latitude": -31.6186951,
+    "longitude": -60.7019561
+  },
+  {
+    "name": "Santa Rosa",
+    "latitude": -36.6203503,
+    "longitude": -64.2905765
+  },
+  {
+    "name": "Santiago del Estero",
+    "latitude": -27.7877148,
+    "longitude": -64.2595062
+  },
+  {
+    "name": "Sunchales",
+    "latitude": -30.9450891,
+    "longitude": -61.5608072
+  },
+  {
+    "name": "Ushuaia",
+    "latitude": -54.807306,
+    "longitude": -68.3084133
+  },
+  {
+    "name": "Aldea Valle Maria",
+    "latitude": -31.990497,
+    "longitude": -60.5882194
+  },
+  {
+    "name": "Veinticinco de Mayo",
+    "latitude": -35.4324152,
+    "longitude": -60.171624
+  },
+  {
+    "name": "Venado Tuerto",
+    "latitude": -33.7455871,
+    "longitude": -61.9686068
+  },
+  {
+    "name": "Villa de la Quebrada",
+    "latitude": -33.015906,
+    "longitude": -66.2880975
+  },
+  {
+    "name": "Bahia Blanca",
+    "latitude": -38.7176522,
+    "longitude": -62.2654871
+  },
+  {
+    "name": "Caseros",
+    "latitude": -32.4630367,
+    "longitude": -58.4787009
+  },
+  {
+    "name": "Coranzuli",
+    "latitude": -23.0136797,
+    "longitude": -66.3666599
+  },
+  {
+    "name": "El Calafate",
+    "latitude": -50.3387375,
+    "longitude": -72.2737216
+  },
+  {
+    "name": "Formosa",
+    "latitude": -26.1852983,
+    "longitude": -58.1744976
+  },
+  {
+    "name": "General Mosconi",
+    "latitude": -22.5960844,
+    "longitude": -63.8109941
+  },
+  {
+    "name": "Gualeguaychu",
+    "latitude": -33.0078585,
+    "longitude": -58.5103466
+  },
+  {
+    "name": "La Rioja",
+    "latitude": -29.4127411,
+    "longitude": -66.8558795
+  },
+  {
+    "name": "Curitiba",
+    "latitude": -25.4295963,
+    "longitude": -49.2712724
+  },
+  {
+    "name": "Natal",
+    "latitude": -5.805398,
+    "longitude": -35.2080905
+  },
+  {
+    "name": "Fortaleza",
+    "latitude": -3.7304512,
+    "longitude": -38.5217989
+  },
+  {
+    "name": "Osorno",
+    "latitude": -40.5736955,
+    "longitude": -73.1358091
+  },
+  {
+    "name": "Los Angeles",
+    "latitude": -37.4707455,
+    "longitude": -72.351686
+  },
+  {
+    "name": "Iquique",
+    "latitude": -20.2140657,
+    "longitude": -70.1524646
+  },
+  {
+    "name": "Coyhaique",
+    "latitude": -45.5711804,
+    "longitude": -72.0684863
+  },
+  {
+    "name": "Calama",
+    "latitude": -22.4623917,
+    "longitude": -68.9272181
+  },
+  {
+    "name": "Chonchi",
+    "latitude": -42.6239756,
+    "longitude": -73.7724416
+  },
+  {
+    "name": "Antofagasta",
+    "latitude": -23.6463741,
+    "longitude": -70.3980033
+  },
+  {
+    "name": "Copiapo",
+    "latitude": -27.3664685,
+    "longitude": -70.3322753
+  },
+  {
+    "name": "Hanga Roa",
+    "latitude": -27.1481172,
+    "longitude": -109.427344
+  },
+  {
+    "name": "Comodoro Rivadavia",
+    "latitude": -45.8632024,
+    "longitude": -67.4752615
+  },
+  {
+    "name": "Encarnacion",
+    "latitude": -27.3376114,
+    "longitude": -55.8669492
+  },
+  {
+    "name": "Vitoria",
+    "latitude": -20.3200917,
+    "longitude": -40.3376682
+  },
+  {
+    "name": "Goiania",
+    "latitude": -16.680882,
+    "longitude": -49.2532691
+  },
+  {
+    "name": "Aracaju",
+    "latitude": -10.9162061,
+    "longitude": -37.0774655
+  },
+  {
+    "name": "Maceio",
+    "latitude": -9.6476843,
+    "longitude": -35.7339264
+  },
+  {
+    "name": "Uberaba",
+    "latitude": -19.750833,
+    "longitude": -47.936666
+  },
+  {
+    "name": "Cambui",
+    "latitude": -22.6122501,
+    "longitude": -46.0572137
+  },
+  {
+    "name": "Governador Valadares",
+    "latitude": -18.8698882,
+    "longitude": -41.9459383
+  },
+  {
+    "name": "Caparao",
+    "latitude": -20.5232726,
+    "longitude": -41.9049984
+  },
+  {
+    "name": "Belo Horizonte",
+    "latitude": -19.9227318,
+    "longitude": -43.9450948
+  },
+  {
+    "name": "Uberlandia",
+    "latitude": -18.9188041,
+    "longitude": -48.2767837
+  },
+  {
+    "name": "Coari",
+    "latitude": -4.0885957,
+    "longitude": -63.1431166
+  },
+  {
+    "name": "Babahoyo",
+    "latitude": -1.8009022,
+    "longitude": -79.5338214
+  },
+  {
+    "name": "Riobamba",
+    "latitude": -1.6732765,
+    "longitude": -78.6482479
+  },
+  {
+    "name": "Portoviejo",
+    "latitude": -1.05282,
+    "longitude": -80.4534134
+  },
+  {
+    "name": "Tulcan",
+    "latitude": 0.8115707,
+    "longitude": -77.7172151
+  },
+  {
+    "name": "Santo Domingo de los Tsachilas",
+    "latitude": -0.2546212,
+    "longitude": -79.1686724
+  },
+  {
+    "name": "Asuncion",
+    "latitude": -25.2800459,
+    "longitude": -57.6343814
+  },
+  {
+    "name": "Arequipa",
+    "latitude": -16.3988667,
+    "longitude": -71.5369607
+  },
+  {
+    "name": "Juliaca",
+    "latitude": -15.4932314,
+    "longitude": -70.1356177
+  },
+  {
+    "name": "Pisco",
+    "latitude": -13.7099813,
+    "longitude": -76.2029793
+  },
+  {
+    "name": "El Chalten",
+    "latitude": -49.3319599,
+    "longitude": -72.8860438
+  },
+  {
+    "name": "Porto Velho",
+    "latitude": -8.7494525,
+    "longitude": -63.8735438
+  },
+  {
+    "name": "Ica",
+    "latitude": -14.0640967,
+    "longitude": -75.7290915
+  },
+  {
+    "name": "Lindoia",
+    "latitude": -22.5229637,
+    "longitude": -46.6502119
+  },
+  {
+    "name": "Cartagena",
+    "latitude": 10.4265566,
+    "longitude": -75.5441671
+  },
+  {
+    "name": "Huancayo",
+    "latitude": -12.068098,
+    "longitude": -75.2100953
+  },
+  {
+    "name": "Abancay",
+    "latitude": -13.6373482,
+    "longitude": -72.8788744
+  },
+  {
+    "name": "Puerto Maldonado",
+    "latitude": -12.5938633,
+    "longitude": -69.1866773
+  },
+  {
+    "name": "Ayacucho",
+    "latitude": -13.1604269,
+    "longitude": -74.2256973
+  },
+  {
+    "name": "Huaraz",
+    "latitude": -9.5298511,
+    "longitude": -77.5289981
+  },
+  {
+    "name": "Trujillo",
+    "latitude": -8.1116778,
+    "longitude": -79.0287742
+  },
+  {
+    "name": "Cajamarca",
+    "latitude": -7.1566682,
+    "longitude": -78.517306
+  },
+  {
+    "name": "Piura",
+    "latitude": -5.1971376,
+    "longitude": -80.6267237
+  },
+  {
+    "name": "Cerro de Pasco",
+    "latitude": -10.6835926,
+    "longitude": -76.2561123
+  },
+  {
+    "name": "Huanuco",
+    "latitude": -9.9293255,
+    "longitude": -76.2394845
+  },
+  {
+    "name": "Cali",
+    "latitude": 3.4519988,
+    "longitude": -76.5325259
+  },
+  {
+    "name": "Paramaribo",
+    "latitude": 5.8247628,
+    "longitude": -55.1703941
+  },
+  {
+    "name": "Criciuma",
+    "latitude": -28.6789941,
+    "longitude": -49.3695627
+  },
+  {
+    "name": "Manizales",
+    "latitude": 5.0668907,
+    "longitude": -75.5066661
+  },
+  {
+    "name": "Sincelejo",
+    "latitude": 9.2973386,
+    "longitude": -75.3926601
+  },
+  {
+    "name": "Cambara do Sul",
+    "latitude": -29.0489517,
+    "longitude": -50.145412
+  },
+  {
+    "name": "Chimbote",
+    "latitude": -9.0744966,
+    "longitude": -78.593609
+  },
+  {
+    "name": "Araguaia River",
+    "latitude": -8.2696905,
+    "longitude": -49.2676864
+  },
+  {
+    "name": "Georgetown",
+    "latitude": 6.8137426,
+    "longitude": -58.1624465
+  },
+  {
+    "name": "Montevideo",
+    "latitude": -34.9058916,
+    "longitude": -56.1913095
+  },
+  {
+    "name": "Trelew",
+    "latitude": -43.2531242,
+    "longitude": -65.3094407
+  },
+  {
+    "name": "Santa Marta",
+    "latitude": 11.2320944,
+    "longitude": -74.1950916
+  },
+  {
+    "name": "Popayan",
+    "latitude": 2.4422295,
+    "longitude": -76.6072368
+  },
+  {
+    "name": "Paysandu",
+    "latitude": -32.3217257,
+    "longitude": -58.0892136
+  },
+  {
+    "name": "Pasto",
+    "latitude": 1.2140275,
+    "longitude": -77.2785096
+  },
+  {
+    "name": "Yopal",
+    "latitude": 5.3356662,
+    "longitude": -72.3936931
+  },
+  {
+    "name": "Ciudad Guayana",
+    "latitude": 8.3223763,
+    "longitude": -62.6896622
+  },
+  {
+    "name": "Ciudad Bolivar",
+    "latitude": 8.1028532,
+    "longitude": -63.5469562
+  },
+  {
+    "name": "Porto Alegre",
+    "latitude": -30.0324999,
+    "longitude": -51.2303767
+  },
+  {
+    "name": "Mabaruma",
+    "latitude": 8.2037266,
+    "longitude": -59.784924
+  },
+  {
+    "name": "Sucre",
+    "latitude": -19.0477251,
+    "longitude": -65.2594306
+  },
+  {
+    "name": "Corumba",
+    "latitude": -19.0016365,
+    "longitude": -57.6534316
+  },
+  {
+    "name": "Cochabamba",
+    "latitude": -17.3936114,
+    "longitude": -66.1568983
+  },
+  {
+    "name": "Salto del Guaira",
+    "latitude": -24.0616604,
+    "longitude": -54.305644
+  },
+  {
+    "name": "Caacupe",
+    "latitude": -25.3856888,
+    "longitude": -57.140477
+  },
+  {
+    "name": "Boa Vista",
+    "latitude": 2.8208478,
+    "longitude": -60.6719582
+  },
+  {
+    "name": "Rondonopolis",
+    "latitude": -16.4603533,
+    "longitude": -54.6397099
+  },
+  {
+    "name": "Campo Grande",
+    "latitude": -20.4640173,
+    "longitude": -54.6162947
+  },
+  {
+    "name": "Guaira",
+    "latitude": -24.0851924,
+    "longitude": -54.2567519
+  },
+  {
+    "name": "Marechal Candido Rondon",
+    "latitude": -24.5582532,
+    "longitude": -54.0587821
+  },
+  {
+    "name": "Chiclayo",
+    "latitude": -6.7716146,
+    "longitude": -79.8387175
+  },
+  {
+    "name": "Bacabal",
+    "latitude": -4.2318132,
+    "longitude": -44.781167
+  },
+  {
+    "name": "Caxias",
+    "latitude": -4.8654201,
+    "longitude": -43.353664
+  },
+  {
+    "name": "Timon",
+    "latitude": -5.1004341,
+    "longitude": -42.8312018
+  },
+  {
+    "name": "Teresina",
+    "latitude": -5.0874608,
+    "longitude": -42.8049571
+  },
+  {
+    "name": "Agua Branca",
+    "latitude": -5.895038,
+    "longitude": -42.6368104
+  },
+  {
+    "name": "Petrolina",
+    "latitude": -9.3817334,
+    "longitude": -40.4968875
+  },
+  {
+    "name": "Juazeiro",
+    "latitude": -9.4336959,
+    "longitude": -40.5068201
+  },
+  {
+    "name": "Rocha",
+    "latitude": -34.4810095,
+    "longitude": -54.3365608
+  },
+  {
+    "name": "Rio Branco",
+    "latitude": -9.9765362,
+    "longitude": -67.8220778
+  },
+  {
+    "name": "Salto",
+    "latitude": -31.38889,
+    "longitude": -57.9608876
+  },
+  {
+    "name": "Moron",
+    "latitude": 10.4861731,
+    "longitude": -68.2027171
+  },
+  {
+    "name": "Maracay",
+    "latitude": 10.2375144,
+    "longitude": -67.5890216
+  },
+  {
+    "name": "Maturin",
+    "latitude": 9.7422774,
+    "longitude": -63.1888854
+  },
+  {
+    "name": "Cumana",
+    "latitude": 10.4495706,
+    "longitude": -64.1578046
+  },
+  {
+    "name": "Puerto Ayacucho",
+    "latitude": 5.655167,
+    "longitude": -67.6000791
+  },
+  {
+    "name": "Sao Jose do Barreiro",
+    "latitude": -22.6452376,
+    "longitude": -44.5805246
+  },
+  {
+    "name": "Itanhaem",
+    "latitude": -24.1848847,
+    "longitude": -46.7921572
+  },
+  {
+    "name": "New Fribourg",
+    "latitude": -22.2800004,
+    "longitude": -42.5325303
+  },
+  {
+    "name": "Tumbes",
+    "latitude": -3.5707875,
+    "longitude": -80.4596454
+  },
+  {
+    "name": "Macapa",
+    "latitude": 0.0401529,
+    "longitude": -51.0569588
+  },
+  {
+    "name": "Chachapoyas",
+    "latitude": -6.2293182,
+    "longitude": -77.8714631
+  },
+  {
+    "name": "Jaboatao dos Guararapes",
+    "latitude": -8.1752476,
+    "longitude": -34.9468716
+  },
+  {
+    "name": "Palmas",
+    "latitude": -10.1837852,
+    "longitude": -48.3336423
+  },
+  {
+    "name": "Luzilandia",
+    "latitude": -3.4648887,
+    "longitude": -42.3689528
+  },
+  {
+    "name": "Jacareacanga",
+    "latitude": -6.2196518,
+    "longitude": -57.758625
+  },
+  {
+    "name": "Sinop",
+    "latitude": -11.857701,
+    "longitude": -55.4967824
+  },
+  {
+    "name": "Colider",
+    "latitude": -10.8094999,
+    "longitude": -55.4540386
+  },
+  {
+    "name": "Itapora",
+    "latitude": -22.0799142,
+    "longitude": -54.7874239
+  },
+  {
+    "name": "Medellin",
+    "latitude": 6.2443382,
+    "longitude": -75.573553
+  },
+  {
+    "name": "Caruaru",
+    "latitude": -8.2829702,
+    "longitude": -35.9722852
+  },
+  {
+    "name": "Belem",
+    "latitude": -1.45056,
+    "longitude": -48.4682453
+  },
+  {
+    "name": "San Cristobal",
+    "latitude": 7.7756663,
+    "longitude": -72.2214154
+  },
+  {
+    "name": "Moyobamba",
+    "latitude": -6.0347302,
+    "longitude": -76.9746773
+  },
+  {
+    "name": "Riberalta",
+    "latitude": -10.997342,
+    "longitude": -66.0751504
+  },
+  {
+    "name": "Santa Cruz de la Sierra",
+    "latitude": -17.7834217,
+    "longitude": -63.1820853
+  },
+  {
+    "name": "Montero",
+    "latitude": -17.3420202,
+    "longitude": -63.2557687
+  },
+  {
+    "name": "Trinidad",
+    "latitude": -14.8349438,
+    "longitude": -64.9044936
+  },
+  {
+    "name": "Guayaramerin",
+    "latitude": -10.818915,
+    "longitude": -65.3550455
+  },
+  {
+    "name": "Jose de Freitas",
+    "latitude": -4.7578357,
+    "longitude": -42.5763777
+  },
+  {
+    "name": "Olho d'Agua das Cunhas",
+    "latitude": -4.140311,
+    "longitude": -45.1184685
+  },
+  {
+    "name": "Senhor do Bonfim",
+    "latitude": -10.4602509,
+    "longitude": -40.189151
+  },
+  {
+    "name": "Chapeco",
+    "latitude": -27.0922364,
+    "longitude": -52.6166878
+  },
+  {
+    "name": "Mariluz",
+    "latitude": -24.0031216,
+    "longitude": -53.148113
+  },
+  {
+    "name": "Ponta Grossa",
+    "latitude": -25.0891685,
+    "longitude": -50.1601812
+  },
+  {
+    "name": "Ijui",
+    "latitude": -28.3878734,
+    "longitude": -53.9201692
+  },
+  {
+    "name": "Canela",
+    "latitude": -29.3636094,
+    "longitude": -50.8096844
+  },
+  {
+    "name": "Itamarati",
+    "latitude": -6.4385189,
+    "longitude": -68.2437385
+  },
+  {
+    "name": "Apui",
+    "latitude": -7.1940195,
+    "longitude": -59.8830192
+  },
+  {
+    "name": "Araguaia River",
+    "latitude": -7.8122669,
+    "longitude": -50.7677675
+  },
+  {
+    "name": "Araguaia River",
+    "latitude": -7.3508505,
+    "longitude": -50.4064531
+  },
+  {
+    "name": "Mitu",
+    "latitude": 1.2538499,
+    "longitude": -70.2345576
+  },
+  {
+    "name": "Luz de America",
+    "latitude": -0.4056162,
+    "longitude": -79.3020059
+  },
+  {
+    "name": "La Playa de Belen",
+    "latitude": 8.2137268,
+    "longitude": -73.2381726
+  },
+  {
+    "name": "Joao Pessoa",
+    "latitude": -7.1215981,
+    "longitude": -34.882028
+  },
+  {
+    "name": "El Limon",
+    "latitude": 10.2925851,
+    "longitude": -67.6298607
+  },
+  {
+    "name": "Carlos Spegazzini",
+    "latitude": -34.9104245,
+    "longitude": -58.5931172
+  },
+  {
+    "name": "Recife",
+    "latitude": -8.0584933,
+    "longitude": -34.8848193
+  },
+  {
+    "name": "Bogota",
+    "latitude": 4.6533816,
+    "longitude": -74.0836333
+  },
+  {
+    "name": "Monteria",
+    "latitude": 8.7509361,
+    "longitude": -75.8786806
+  },
+  {
+    "name": "Whitewater",
+    "latitude": 8.1512699,
+    "longitude": -59.8812069
+  },
+  {
+    "name": "Villavicencio",
+    "latitude": 4.1347644,
+    "longitude": -73.6201517
+  },
+  {
+    "name": "Tumaco",
+    "latitude": 1.8061434,
+    "longitude": -78.7635572
+  },
+  {
+    "name": "Ilo",
+    "latitude": -17.6458772,
+    "longitude": -71.3452005
+  },
+  {
+    "name": "Punto Fijo",
+    "latitude": 11.6931716,
+    "longitude": -70.1917178
+  },
+  {
+    "name": "Caracas",
+    "latitude": 10.5060934,
+    "longitude": -66.9146008
+  },
+  {
+    "name": "Nazca",
+    "latitude": -14.8277203,
+    "longitude": -74.9370624
+  },
+  {
+    "name": "Guanare",
+    "latitude": 9.0407855,
+    "longitude": -69.7412593
+  },
+  {
+    "name": "Bucaramanga",
+    "latitude": 7.1255169,
+    "longitude": -73.1182624
+  },
+  {
+    "name": "Bage",
+    "latitude": -31.3314264,
+    "longitude": -54.1062808
+  },
+  {
+    "name": "Temuco",
+    "latitude": -38.7358908,
+    "longitude": -72.590538
+  },
+  {
+    "name": "Resistencia",
+    "latitude": -27.4511077,
+    "longitude": -58.9865196
+  },
+  {
+    "name": "Cuiaba",
+    "latitude": -15.5986686,
+    "longitude": -56.0991301
+  },
+  {
+    "name": "Stanley",
+    "latitude": -51.6930616,
+    "longitude": -57.856525
+  },
+  {
+    "name": "Moquegua",
+    "latitude": -17.1938025,
+    "longitude": -70.9345636
+  },
+  {
+    "name": "Vilhena",
+    "latitude": -12.7368536,
+    "longitude": -60.1465555
+  },
+  {
+    "name": "Los Penitentes",
+    "latitude": -32.8411158,
+    "longitude": -69.8411721
+  },
+  {
+    "name": "Maraba",
+    "latitude": -5.3462821,
+    "longitude": -49.1007401
+  },
+  {
+    "name": "San Luis",
+    "latitude": -33.3020736,
+    "longitude": -66.3369577
+  },
+  {
+    "name": "La Paz",
+    "latitude": -16.4955455,
+    "longitude": -68.1336229
+  },
+  {
+    "name": "Manta",
+    "latitude": -0.9485461,
+    "longitude": -80.719265
+  },
+  {
+    "name": "Araguaia River",
+    "latitude": -9.3348334,
+    "longitude": -50.3427734
+  },
+  {
+    "name": "Cordoba",
+    "latitude": -31.4166867,
+    "longitude": -64.1834193
+  },
+  {
+    "name": "Morropon",
+    "latitude": -5.1842922,
+    "longitude": -79.9717204
+  },
+  {
+    "name": "Calabozo",
+    "latitude": 8.9179829,
+    "longitude": -67.4173328
+  },
+  {
+    "name": "Villa Llanquin",
+    "latitude": -40.894627,
+    "longitude": -71.0366579
+  },
+  {
+    "name": "Pucallpa",
+    "latitude": -8.3820737,
+    "longitude": -74.5387507
+  },
+  {
+    "name": "Santa Maria",
+    "latitude": -26.6945749,
+    "longitude": -66.0480813
+  },
+  {
+    "name": "La Rinconada",
+    "latitude": -14.6341618,
+    "longitude": -69.446877
+  },
+  {
+    "name": "Bello",
+    "latitude": 6.334997,
+    "longitude": -75.5582665
+  },
+  {
+    "name": "Sevilla",
+    "latitude": 4.2645071,
+    "longitude": -75.934396
+  },
+  {
+    "name": "Calera de Tango",
+    "latitude": -33.6309419,
+    "longitude": -70.7593202
+  },
+  {
+    "name": "Maruranau",
+    "latitude": 2.7469128,
+    "longitude": -59.1587032
+  },
+  {
+    "name": "Aishalton",
+    "latitude": 2.4777029,
+    "longitude": -59.3211423
+  },
+  {
+    "name": "Shea",
+    "latitude": 2.8142777,
+    "longitude": -59.1485006
+  },
+  {
+    "name": "Puerto Natales",
+    "latitude": -51.7262003,
+    "longitude": -72.5059982
+  },
+  {
+    "name": "Huaranchacra",
+    "latitude": -9.4386391,
+    "longitude": -77.1596993
+  },
+  {
+    "name": "Countryside Cheerful",
+    "latitude": -7.4453341,
+    "longitude": -78.1696859
+  },
+  {
+    "name": "Valdivia",
+    "latitude": -39.8141262,
+    "longitude": -73.2459859
+  },
+  {
+    "name": "Lima",
+    "latitude": -12.0621065,
+    "longitude": -77.0365256
+  },
+  {
+    "name": "Coro",
+    "latitude": 11.4055796,
+    "longitude": -69.6679115
+  },
+  {
+    "name": "Comunity Aborigen Mbya",
+    "latitude": -27.4219711,
+    "longitude": -55.5744761
+  },
+  {
+    "name": "Tacna",
+    "latitude": -18.01386,
+    "longitude": -70.2511032
+  },
+  {
+    "name": "Puerto Almanza",
+    "latitude": -54.8694749,
+    "longitude": -67.5624443
+  },
+  {
+    "name": "Vilhena Village",
+    "latitude": 2.1928133,
+    "longitude": -60.0739867
+  },
+  {
+    "name": "Tenaun Bajo",
+    "latitude": -42.3320599,
+    "longitude": -73.3738011
+  },
+  {
+    "name": "San Antonio Village",
+    "latitude": -32.2567277,
+    "longitude": -64.6081858
+  },
+  {
+    "name": "Balas Puerto",
+    "latitude": -5.831621,
+    "longitude": -76.5598614
+  },
+  {
+    "name": "Curral de Varas",
+    "latitude": -14.1672634,
+    "longitude": -42.6356931
+  },
+  {
+    "name": "Machupicchu Town",
+    "latitude": -13.1542838,
+    "longitude": -72.5256464
+  },
+  {
+    "name": "Paita",
+    "latitude": -5.0851637,
+    "longitude": -81.1136793
+  },
+  {
+    "name": "King Edward Point",
+    "latitude": -54.283545,
+    "longitude": -36.4946355
+  },
+  {
+    "name": "Valencia",
+    "latitude": 10.170026,
+    "longitude": -68.0003987
+  },
+  {
+    "name": "Porvenir Village",
+    "latitude": -16.825909,
+    "longitude": -65.3466974
+  },
+  {
+    "name": "Santa Mission",
+    "latitude": 6.5610178,
+    "longitude": -58.3326304
+  }
+]
