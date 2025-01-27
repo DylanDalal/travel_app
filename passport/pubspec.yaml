@@ -21,6 +21,8 @@ dependencies:
   shared_preferences: ^2.2.0
   photo_manager: ^3.6.3
   mapbox_maps_flutter: ^2.0.0
+  geohash: ^0.3.0
+  intl: ^0.17.0
 
 
 
@@ -34,3 +36,11 @@ flutter:
 
   assets:
     - lib/assets/pin.png
+    - trips/africa.json
+    - trips/asia.json
+    - trips/europe.json
+    - trips/north_america.json
+    - trips/south_america.json
+    - trips/oceania.json
+    - trips/antarctica.json
+    - trips/central_america.json
