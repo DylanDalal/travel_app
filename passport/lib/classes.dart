@@ -3,13 +3,23 @@ class Location {
   final double latitude;
   final double longitude;
   final String timestamp;
+  final String? closestCity; // Add this field
 
-  /// Creates a new [Location] with the given latitude, longitude, and timestamp.
-  const Location({
+  Location({
     required this.latitude,
     required this.longitude,
     required this.timestamp,
+    this.closestCity,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'latitude': latitude,
+      'longitude': longitude,
+      'timestamp': timestamp,
+      'closestCity': closestCity,
+    };
+  }
 }
 
 class City {

@@ -3,7 +3,10 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart' show VoidCallback;
 import 'dart:typed_data';
 import 'dart:async';
-import 'dart:math';
+import 'dart:convert';
+import 'dart:math' as math;
+import 'package:flutter/services.dart' show rootBundle;
+import '../classes.dart'; 
 
 import '../classes.dart';
 
@@ -27,36 +30,35 @@ class MapManager {
 /// Callback for any post-plot logic
   MapManager({required this.onPlotComplete});
 
-  /// Called once MapWidget is created
-  void initializeMapManager(MapboxMap map) {
+  /// A global list to store all cities from multiple continents
+  List<City> allCities = [];
+  /// TOOD: MAKE GLOBE SPIN, DETECT USER INTERACTION
+  ///      _startRotatingGlobe();
+  ///      _mapboxMap.setOnMapMoveListener((point) => _handleUserInteraction());
+  ///      _mapboxMap.setOnMapTapListener((point) => _handleUserInteraction());
+  ///
+  Future<void> initializeMapManager(MapboxMap map) async {
     if (_isInitialized) {
       print("MapManager is already initialized. Skipping re-initialization.");
       return;
     }
 
     _mapboxMap = map;
-    _mapboxMap.annotations.createPointAnnotationManager().then((manager) {
-      _pointAnnotationManager = manager;
+    try {
+      _pointAnnotationManager = await _mapboxMap.annotations.createPointAnnotationManager();
       _isInitialized = true;
       print("MapManager initialized successfully.");
 
-      //Style options
-
-       // Disable the compass and scale bar
+      // Disable compass etc.
       _mapboxMap.compass.updateSettings(CompassSettings(enabled: false));
       _mapboxMap.logo.updateSettings(LogoSettings(enabled: false));
       _mapboxMap.scaleBar.updateSettings(ScaleBarSettings(enabled: false));
 
-
-      // Start rotating the globe
-      _startRotatingGlobe();
-
-      // Detect user interactions and stop rotation
-      _mapboxMap.setOnMapMoveListener((point) => _handleUserInteraction());
-      _mapboxMap.setOnMapTapListener((point) => _handleUserInteraction());
-
-      print("Map interaction listeners added.");
-    }).catchError((err) => print("Error creating manager: $err"));
+      // Load city datasets
+      await loadAllCityDatasets();
+    } catch (err) {
+      print("Error creating manager: $err");
+    }
   }
 
 void _startRotatingGlobe() async {
@@ -239,4 +241,91 @@ void setViewingTrip(bool isViewing) {
     _startRotatingGlobe();
   }
 
+/// Find the closest city in [allCities] to the given [lat]/[lon].
+/// Returns `null` if no cities are loaded.
+City? findClosestCity(double lat, double lon) {
+  if (allCities.isEmpty) {
+    print('No cities loaded. Did you call loadAllCityDatasets()?');
+    return null;
+  }
+
+  City? closestCity;
+  double minDistance = double.infinity;
+
+  for (final city in allCities) {
+    final distance = haversineDistance(lat, lon, city.latitude, city.longitude);
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestCity = city;
+    }
+  }
+
+  if (closestCity != null) {
+    print('Closest city to ($lat, $lon) is ${closestCity.name} at distance ${minDistance.toStringAsFixed(2)} km.');
+  } else {
+    print('No closest city found for ($lat, $lon).');
+  }
+
+  return closestCity;
 }
+
+/// Load city data from multiple JSON files (e.g., 7 continents + Central America)
+Future<void> loadAllCityDatasets() async {
+  // Update with all your JSON paths
+  const datasetFiles = [
+    'lib/database/africa.json',
+    'lib/database/asia.json',
+    'lib/database/europe.json',
+    'lib/database/north-america.json',
+    'lib/database/south-america.json',
+    'lib/database/oceania.json',
+    'lib/database/antarctica.json',
+    'lib/database/central-america.json',
+  ];
+
+  allCities.clear();
+
+  for (final filePath in datasetFiles) {
+    try {
+      // Load the JSON from assets
+      final dataString = await rootBundle.loadString(filePath);
+      final List<dynamic> jsonList = jsonDecode(dataString);
+
+      // Parse each city entry
+      for (var item in jsonList) {
+        final name = item['name'] as String?;
+        final lat = item['latitude']?.toDouble();
+        final lon = item['longitude']?.toDouble();
+
+        // Skip invalid entries or "Unknown" placeholders
+        if (name == null || lat == null || lon == null) continue;
+
+        allCities.add(City(name: name, latitude: lat, longitude: lon));
+      }
+    } catch (e) {
+      print('Error loading $filePath: $e');
+    }
+  }
+
+  print('Loaded ${allCities.length} total cities from datasets.');
+}
+
+/// Calculate Haversine distance in kilometers.
+double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
+  const double R = 6371; // Earth's radius in kilometers
+  final double dLat = _toRadians(lat2 - lat1);
+  final double dLon = _toRadians(lon2 - lon1);
+
+  final double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+      math.cos(_toRadians(lat1)) * math.cos(_toRadians(lat2)) *
+          math.sin(dLon / 2) * math.sin(dLon / 2);
+
+  final double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+  return R * c;
+}
+
+double _toRadians(double deg) => deg * (math.pi / 180.0);
+
+}
+
+

@@ -1,3 +1,5 @@
+// lib/home_screen.dart
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:passport/trips/map_manager.dart';
 import 'package:photo_manager/photo_manager.dart' as photo;
@@ -7,6 +9,8 @@ import 'package:passport/user_data/data_operations.dart';
 import 'my_trips_section.dart';
 import 'friends_section.dart';
 import 'classes.dart';
+import 'utils/permission_utils.dart'; // Import PermissionUtils
+import 'dart:async'; // Import for Timer
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -19,8 +23,7 @@ class HomeScreenState extends State<HomeScreen> {
 
   late MapManager _mapManager;
 
-
-@override
+  @override
   void initState() {
     super.initState();
     _mapManager = MapManager(
@@ -34,10 +37,7 @@ class HomeScreenState extends State<HomeScreen> {
     _initializeUserData();
   }
 
-
-
-
-Future<void> _initializeUserData() async {
+  Future<void> _initializeUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -53,33 +53,26 @@ Future<void> _initializeUserData() async {
     }
   }
 
-
-
   Future<bool> _checkIfFirstLogin(String userId) async {
     try {
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
           .get();
-      if (userDoc.exists && userDoc.data()?['hasPhotoMetadata'] == true) 
-      {
+      if (userDoc.exists && userDoc.data()?['hasPhotoMetadata'] == true) {
         return false; // Not first login
       }
       return true; // First login
-    } 
-    catch (e) 
-    {
+    } catch (e) {
       print("Error checking first login: $e");
       return false;
     }
   }
 
+  void _promptForPhotoSelection(BuildContext context, String userId) async {
+    final bool photoAccessGranted = await PermissionUtils.requestPhotoPermission();
 
-void _promptForPhotoSelection(BuildContext context, String userId) async {
-    final photo.PermissionState state =
-        await PhotoManager.requestPhotoPermission();
-
-    if (state == photo.PermissionState.authorized) {
+    if (photoAccessGranted) {
       print('Photo access granted');
 
       final userDoc = await FirebaseFirestore.instance
@@ -92,7 +85,7 @@ void _promptForPhotoSelection(BuildContext context, String userId) async {
         return;
       }
 
-      List<Location> fetchedPhotos = await PhotoManager.fetchAllPhotoMetadata();
+      List<Location> fetchedPhotos = await CustomPhotoManager.fetchAllPhotoMetadata();
       setState(() {
         photoLocations = fetchedPhotos;
       });
@@ -106,7 +99,7 @@ void _promptForPhotoSelection(BuildContext context, String userId) async {
       print('Saved photo metadata successfully.');
 
       // Plot the photos immediately after saving
-      await PhotoManager.fetchAndPlotPhotoMetadata(
+      await CustomPhotoManager.fetchAndPlotPhotoMetadata(
           context,
           _mapManager,
           DateTimeRange(
@@ -117,7 +110,7 @@ void _promptForPhotoSelection(BuildContext context, String userId) async {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Your photos have been saved and plotted!')),
       );
-    } else if (state == photo.PermissionState.limited) {
+    } else if (photo.PermissionState.limited == photo.PermissionState.limited) {
       print('Photo access is limited.');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -129,7 +122,6 @@ void _promptForPhotoSelection(BuildContext context, String userId) async {
       _showPermissionDialog(context);
     }
   }
-
 
   void _showPermissionDialog(BuildContext context) {
     showDialog(
@@ -146,7 +138,7 @@ void _promptForPhotoSelection(BuildContext context, String userId) async {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              PhotoManager.openSettingsIfNeeded(context);
+              PermissionUtils.openSettingsIfNeeded();
             },
             child: Text('Open Settings'),
           ),
@@ -155,11 +147,7 @@ void _promptForPhotoSelection(BuildContext context, String userId) async {
     );
   }
 
-
-
-
-
-bool _dataFetched = false; // Add a flag to prevent re-fetching
+  bool _dataFetched = false; // Add a flag to prevent re-fetching
 
   Future<void> _fetchStoredPhotoData(String userId) async {
     if (_dataFetched) {
@@ -184,7 +172,7 @@ bool _dataFetched = false; // Add a flag to prevent re-fetching
     print("Fetching and plotting photo data for user: $userId");
 
     try {
-      await PhotoManager.fetchAndPlotPhotoMetadata(
+      await CustomPhotoManager.fetchAndPlotPhotoMetadata(
           context, _mapManager, timeframe);
       print("Photo data fetched and plotted successfully.");
     } catch (e) {
@@ -193,18 +181,14 @@ bool _dataFetched = false; // Add a flag to prevent re-fetching
     }
   }
 
-
-
-  Future<void> _logout(BuildContext context) async 
-  {
+  Future<void> _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, '/');
   }
 
   @override
-  Widget build(BuildContext context) 
-  {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -229,7 +213,9 @@ bool _dataFetched = false; // Add a flag to prevent re-fetching
           ),
         ],
       ),
-      body: _currentIndex == 0 ? MyTripsSection(mapManager: _mapManager) : FriendsSection(),
+      body: _currentIndex == 0
+          ? MyTripsSection(mapManager: _mapManager)
+          : FriendsSection(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {

@@ -1,15 +1,20 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:passport/trips/map_manager.dart';
-import 'package:passport/utils/permission_utils.dart';
-import 'package:photo_manager/photo_manager.dart' as photo;
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../classes.dart';
-import 'package:flutter/material.dart';
+// lib/user_data/data_operations.dart
 
+import 'dart:async'; // Import for Timer
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:photo_manager/photo_manager.dart' as photo;
+
+// Import the PermissionUtils class
+import '../utils/permission_utils.dart'; // Adjust the path based on your project structure
+
+import '../trips/map_manager.dart'; // Import MapManager
+import '../classes.dart'; // For the Location class, etc.
 
 /*
     ===  Class DataFetcher ===
-    Responsible for retrieving a users data from firebase.
+    Responsible for retrieving a user's data from Firebase.
 */
 class DataFetcher {
   /// Fetch photo metadata stored in Firebase for a given timeframe
@@ -31,6 +36,7 @@ class DataFetcher {
               latitude: data['latitude'],
               longitude: data['longitude'],
               timestamp: data['timestamp'],
+              closestCity: data['closestCity'] ?? 'Unknown',
             ))
         .where((location) {
           final timestamp = DateTime.parse(location.timestamp);
@@ -43,94 +49,94 @@ class DataFetcher {
   }
 }
 
-
 /*
     ===  Class DataSaver ===
-    Responsible for saving a users data to firebase.
+    Responsible for saving a user's data to Firebase.
 */
 class DataSaver {
-      /// Save photo metadata to Firebase
-      static Future<void> savePhotoMetadataToFirebase(
-          String userId, List<Location> photoLocations) async {
-        final userDoc = FirebaseFirestore.instance.collection('users').doc(userId);
+  /// Save photo metadata to Firebase
+  static Future<void> savePhotoMetadataToFirebase(
+      String userId, List<Location> photoLocations) async {
+    final userDoc =
+        FirebaseFirestore.instance.collection('users').doc(userId);
 
-        // Prepare data for Firebase
-        List<Map<String, dynamic>> locationData = photoLocations
-            .map((location) => {
-                  'latitude': location.latitude,
-                  'longitude': location.longitude,
-                  'timestamp': location.timestamp,
-                })
-            .toList();
-        print('Saving to Firebase: $locationData');
+    // Prepare data for Firebase
+    List<Map<String, dynamic>> locationData = photoLocations
+        .map((location) => {
+              'latitude': location.latitude,
+              'longitude': location.longitude,
+              'timestamp': location.timestamp,
+              'closestCity': location.closestCity,
+            })
+        .toList();
+    print('Saving to Firebase: $locationData');
 
-        // Store data in Firestore
-        await userDoc
-            .set({'photoLocations': locationData}, SetOptions(merge: true));
+    // Store data in Firestore
+    await userDoc
+        .set({'photoLocations': locationData}, SetOptions(merge: true));
+  }
+
+  /// Sign up a user and initialize their data
+  static Future<void> signUp({
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
+    try {
+      print("=============Signup initiated===============\n\n");
+      // Create user with Firebase Authentication
+      final userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
+
+      final userId = userCredential.user?.uid;
+      if (userId == null) {
+        throw Exception('Failed to retrieve user ID.');
       }
 
-      /// Sign up a user and initialize their data
-      static Future<void> signUp(
+      // Initialize user document in Firestore
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'email': email,
+        'acceptedTerms': false, // Default value
+      });
 
-          {required String email,
-          required String password,
-          required BuildContext context}) async {
-        try {
-          print("=============Signup initiated===============\n\n");
-          // Create user with Firebase Authentication
-          final userCredential =
-              await FirebaseAuth.instance.createUserWithEmailAndPassword(
-            email: email.trim(),
-            password: password.trim(),
-          );
-
-          final userId = userCredential.user?.uid;
-          if (userId == null) {
-            throw Exception('Failed to retrieve user ID.');
-          }
-
-          // Initialize user document in Firestore
-          await FirebaseFirestore.instance.collection('users').doc(userId).set({
-            'email': email,
-            'acceptedTerms': false, // Default value
-          });
-
-          // Request photo permissions
-          bool photoAccessGranted = await PermissionUtils.requestPhotoPermission();
-          if (!photoAccessGranted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Photo access is required to upload your photos.',
-                ),
-              ),
-            );
-            PermissionUtils.openSettingsIfNeeded();
-            return;
-          }
-
-          // Fetch and save photo metadata
-          final List<Location> photoMetadata =
-              await PhotoManager.fetchAllPhotoMetadata();
-          await savePhotoMetadataToFirebase(userId, photoMetadata);
-
-          // Navigate to the Welcome Screen
-          Navigator.pushReplacementNamed(context, '/welcome');
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Signup failed: $e')),
-          );
-        }
+      // Request photo permissions
+      bool photoAccessGranted =
+          await PermissionUtils.requestPhotoPermission();
+      if (!photoAccessGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Photo access is required to upload your photos.',
+            ),
+          ),
+        );
+        PermissionUtils.openSettingsIfNeeded();
+        return;
       }
+
+      // Fetch and save photo metadata
+      final List<Location> photoMetadata =
+          await CustomPhotoManager.fetchAllPhotoMetadata();
+      await savePhotoMetadataToFirebase(userId, photoMetadata);
+
+      // Navigate to the Welcome Screen
+      Navigator.pushReplacementNamed(context, '/welcome');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Signup failed: $e')),
+      );
+    }
+  }
 }
 
-
 /*
-    ===  Class PhotoManager ===
+    ===  Class CustomPhotoManager ===
     Responsible for locally retrieving photo metadata / dealing with permissions
 */
-class PhotoManager {
-  /// Request photo library access using `photo_manager` and return the state
+class CustomPhotoManager {
   /// Request photo library access using `photo_manager` and return the state
   static Future<photo.PermissionState> requestPhotoPermission() async {
     final photo.PermissionState state =
@@ -148,8 +154,10 @@ class PhotoManager {
 
   /// Handle denied permissions by opening settings only if explicitly requested
   static Future<void> openSettingsIfNeeded(BuildContext context) async {
-    final photo.PermissionState state = await photo.PhotoManager.requestPermissionExtend();
-    if (state == photo.PermissionState.denied || state == photo.PermissionState.restricted) {
+    final photo.PermissionState state =
+        await photo.PhotoManager.requestPermissionExtend();
+    if (state == photo.PermissionState.denied ||
+        state == photo.PermissionState.restricted) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -172,7 +180,6 @@ class PhotoManager {
       );
     }
   }
-
 
   /// Fetch all photo metadata across the entire device
   static Future<List<Location>> fetchAllPhotoMetadata() async {
@@ -202,6 +209,7 @@ class PhotoManager {
             latitude: photoEntity.latitude!,
             longitude: photoEntity.longitude!,
             timestamp: photoEntity.createDateTime.toIso8601String(),
+            closestCity: 'Unknown', // Will be updated later
           ));
         }
       }
@@ -235,13 +243,21 @@ class PhotoManager {
     );
   }
 
-
-  
-  static Future<void> fetchAndPlotPhotoMetadata(BuildContext context,
-      MapManager mapManager, DateTimeRange timeframe) async {
+  /// Fetch and plot photo metadata on the map
+  static Future<void> fetchAndPlotPhotoMetadata(
+      BuildContext context, MapManager mapManager, DateTimeRange timeframe) async {
     if (timeframe == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please select a timeframe first.')),
+      );
+      return;
+    }
+
+    // Check if MapManager is initialized
+    if (!mapManager.isInitialized) {
+      print("MapManager not initialized yet.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Map is not ready yet. Please try again shortly.')),
       );
       return;
     }
@@ -295,19 +311,31 @@ class PhotoManager {
             photoEntity.longitude != 0.0 &&
             photoEntity.createDateTime.isAfter(start) &&
             photoEntity.createDateTime.isBefore(end)) {
+          // Find the closest city using the MapManager instance
+          City? closestCity = mapManager.findClosestCity(
+              photoEntity.latitude!, photoEntity.longitude!);
+
+          // Print the closest city
+          if (closestCity != null) {
+            print(
+                "Closest city for photo at (${photoEntity.latitude}, ${photoEntity.longitude}) is: ${closestCity.name}");
+          } else {
+            print(
+                "No closest city found for photo at (${photoEntity.latitude}, ${photoEntity.longitude}).");
+          }
+
+          // Add photo metadata and closest city to photoLocations
           photoLocations.add(Location(
             latitude: photoEntity.latitude!,
             longitude: photoEntity.longitude!,
             timestamp: photoEntity.createDateTime.toIso8601String(),
+            closestCity: closestCity?.name ?? 'Unknown', // Include closest city
           ));
-          print(
-              "Fetched photo: ${photoEntity.latitude}, ${photoEntity.longitude}");
         } else {
           print(
               "Skipping invalid photo: ${photoEntity.latitude}, ${photoEntity.longitude}");
         }
       }
-
 
       if (photoLocations.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -315,14 +343,32 @@ class PhotoManager {
         );
       } else {
         print("Plotting ${photoLocations.length} locations on the map.");
-        mapManager.plotLocationsOnMap(photoLocations);
+        await mapManager.plotLocationsOnMap(photoLocations);
+
+        // Save to Firebase
+        final List<Map<String, dynamic>> firebaseData =
+            photoLocations.map((location) => location.toMap()).toList();
+
+        print("Saving to Firebase: $firebaseData");
+
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          await FirebaseFirestore.instance
+              .collection('user_photos')
+              .doc(user.uid) // Use the actual user's UID
+              .set({'photos': firebaseData}, SetOptions(merge: true));
+
+          print("Photo data with closest city saved to Firebase.");
+        } else {
+          print("No authenticated user found. Cannot save to Firebase.");
+        }
       }
-    } catch (e) {
+    } catch (e, stack) {
       print('Error fetching photo metadata: $e');
+      print(stack);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error fetching photo metadata.')),
       );
     }
   }
-
 }
