@@ -315,21 +315,12 @@ class CustomPhotoManager {
           City? closestCity = mapManager.findClosestCity(
               photoEntity.latitude!, photoEntity.longitude!);
 
-          // Print the closest city
-          if (closestCity != null) {
-            print(
-                "Closest city for photo at (${photoEntity.latitude}, ${photoEntity.longitude}) is: ${closestCity.name}");
-          } else {
-            print(
-                "No closest city found for photo at (${photoEntity.latitude}, ${photoEntity.longitude}).");
-          }
-
           // Add photo metadata and closest city to photoLocations
           photoLocations.add(Location(
             latitude: photoEntity.latitude!,
             longitude: photoEntity.longitude!,
             timestamp: photoEntity.createDateTime.toIso8601String(),
-            closestCity: closestCity?.name ?? 'Unknown', // Include closest city
+            closestCity: closestCity?.name ?? 'Unknown',
           ));
         } else {
           print(
