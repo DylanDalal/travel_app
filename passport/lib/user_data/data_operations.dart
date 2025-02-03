@@ -1,21 +1,13 @@
 // lib/user_data/data_operations.dart
 
-import 'dart:async'; // Import for Timer
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:photo_manager/photo_manager.dart' as photo;
+import 'package:photo_manager/photo_manager.dart';
+import '../trips/map_manager.dart';
+import '../classes.dart'; // Import your data models
+import '../utils/permission_utils.dart'; // Import permission utilities if any
 
-// Import the PermissionUtils class
-import '../utils/permission_utils.dart'; // Adjust the path based on your project structure
-
-import '../trips/map_manager.dart'; // Import MapManager
-import '../classes.dart'; // For the Location class, etc.
-
-/*
-    ===  Class DataFetcher ===
-    Responsible for retrieving a user's data from Firebase.
-*/
 class DataFetcher {
   /// Fetch photo metadata stored in Firebase for a given timeframe
   static Future<List<Location>> fetchPhotoMetadataFromFirebase(
@@ -36,7 +28,6 @@ class DataFetcher {
               latitude: data['latitude'],
               longitude: data['longitude'],
               timestamp: data['timestamp'],
-              closestCity: data['closestCity'] ?? 'Unknown',
             ))
         .where((location) {
           final timestamp = DateTime.parse(location.timestamp);
@@ -47,33 +38,54 @@ class DataFetcher {
 
     return filteredLocations;
   }
+
+  /// Fetch and plot photo metadata
+  static Future<void> fetchAndPlotPhotoMetadata(
+      BuildContext context, MapManager mapManager, DateTimeRange timeframe) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('No authenticated user found.');
+      }
+
+      // Fetch photo metadata from Firebase
+      List<Location> photoLocations =
+          await fetchPhotoMetadataFromFirebase(user.uid, timeframe);
+
+      if (photoLocations.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No photo metadata found in the selected timeframe.')),
+        );
+        return;
+      }
+
+      // Plot locations on the map
+      await mapManager.plotLocationsOnMap(photoLocations);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Your trips have been loaded successfully!')),
+      );
+    } catch (e) {
+      print('Error in fetchAndPlotPhotoMetadata: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load trips: $e')),
+      );
+    }
+  }
 }
 
-/*
-    ===  Class DataSaver ===
-    Responsible for saving a user's data to Firebase.
-*/
 class DataSaver {
   /// Save photo metadata to Firebase
   static Future<void> savePhotoMetadataToFirebase(
       String userId, List<Location> photoLocations) async {
-    final userDoc =
-        FirebaseFirestore.instance.collection('users').doc(userId);
-
-    // Prepare data for Firebase
-    List<Map<String, dynamic>> locationData = photoLocations
-        .map((location) => {
-              'latitude': location.latitude,
-              'longitude': location.longitude,
-              'timestamp': location.timestamp,
-              'closestCity': location.closestCity,
-            })
-        .toList();
-    print('Saving to Firebase: $locationData');
-
-    // Store data in Firestore
-    await userDoc
-        .set({'photoLocations': locationData}, SetOptions(merge: true));
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'photoLocations': photoLocations.map((loc) => loc.toMap()).toList(),
+      }, SetOptions(merge: true));
+      print('Photo metadata saved to Firebase.');
+    } catch (e) {
+      print('Error saving photo metadata: $e');
+    }
   }
 
   /// Sign up a user and initialize their data
@@ -113,7 +125,7 @@ class DataSaver {
             ),
           ),
         );
-        PermissionUtils.openSettingsIfNeeded();
+        await CustomPhotoManager.openSettingsIfNeeded(context);
         return;
       }
 
@@ -132,100 +144,106 @@ class DataSaver {
   }
 }
 
-/*
-    ===  Class CustomPhotoManager ===
-    Responsible for locally retrieving photo metadata / dealing with permissions
-*/
 class CustomPhotoManager {
-  /// Request photo library access using `photo_manager` and return the state
-  static Future<photo.PermissionState> requestPhotoPermission() async {
-    final photo.PermissionState state =
-        await photo.PhotoManager.requestPermissionExtend();
+  /// Fetch all photo metadata
+  static Future<List<Location>> fetchAllPhotoMetadata() async {
+    List<Location> locations = [];
+    try {
+      // Request permission
+      final PermissionState permission = await PhotoManager.requestPermissionExtend();
+      if (!permission.isAuth) {
+        print('Photo access denied.');
+        return locations;
+      }
 
-    if (state == photo.PermissionState.authorized) {
-      print('Photo access granted');
-    } else if (state == photo.PermissionState.limited) {
-      print('Photo access granted with limitations');
-    } else {
-      print('Photo access denied');
+      // Fetch all albums
+      final List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
+        type: RequestType.image,
+        hasAll: true,
+      );
+
+      for (final AssetPathEntity album in albums) {
+        // Fetch all photos in the album
+        // Adjusted to use named parameters if required
+        final List<AssetEntity> photos = await album.getAssetListPaged(page: 0, size: 10000);
+        for (final AssetEntity photo in photos) {
+          if (photo.latitude != null && photo.longitude != null) {
+            final double latitude = photo.latitude!;
+            final double longitude = photo.longitude!;
+            final DateTime date = photo.createDateTime;
+
+            // Create Location object
+            final Location location = Location(
+              latitude: latitude,
+              longitude: longitude,
+              timestamp: date.toIso8601String(),
+            );
+
+            locations.add(location);
+          }
+        }
+      }
+    } catch (e) {
+      print('Error fetching photo metadata: $e');
     }
-    return state;
+    return locations;
   }
 
-  /// Handle denied permissions by opening settings only if explicitly requested
-  static Future<void> openSettingsIfNeeded(BuildContext context) async {
-    final photo.PermissionState state =
-        await photo.PhotoManager.requestPermissionExtend();
-    if (state == photo.PermissionState.denied ||
-        state == photo.PermissionState.restricted) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Photo Access Required'),
-          content: Text('To continue using the app, please grant photo access.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                photo.PhotoManager.openSetting();
-              },
-              child: Text('Open Settings'),
-            ),
-          ],
-        ),
+  /// Fetch and plot photo metadata on the map
+  static Future<void> fetchAndPlotPhotoMetadata(
+      BuildContext context, MapManager mapManager, DateTimeRange timeframe) async {
+    try {
+      // Fetch photo metadata
+      final List<Location> locations = await fetchAllPhotoMetadata();
+
+      if (locations.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No photo metadata found.')),
+        );
+        return;
+      }
+
+      // Optionally, filter locations based on the timeframe
+      final List<Location> filteredLocations = locations.where((location) {
+        final DateTime photoDate = DateTime.parse(location.timestamp);
+        return photoDate.isAfter(timeframe.start) && photoDate.isBefore(timeframe.end);
+      }).toList();
+
+      if (filteredLocations.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No photos found in the selected timeframe.')),
+        );
+        return;
+      }
+
+      // Plot locations on the map
+      await mapManager.plotLocationsOnMap(filteredLocations);
+
+      // Save to Firebase if needed
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('user_photos').doc(user.uid).set({
+          'photos': filteredLocations.map((loc) => loc.toMap()).toList(),
+        }, SetOptions(merge: true));
+        print("Photo data saved to Firebase.");
+      } else {
+        print("No authenticated user found. Cannot save to Firebase.");
+      }
+    } catch (e) {
+      print('Error fetching and plotting photo metadata: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching and plotting photo metadata.')),
       );
     }
   }
 
-  /// Fetch all photo metadata across the entire device
-  static Future<List<Location>> fetchAllPhotoMetadata() async {
-    final photo.PermissionState state = await requestPhotoPermission();
-    if (!state.hasAccess) {
-      throw Exception('Photo access denied.');
-    }
-
-    // Fetch albums
-    List<photo.AssetPathEntity> albums =
-        await photo.PhotoManager.getAssetPathList(
-      type: photo.RequestType.image,
-    );
-
-    if (albums.isEmpty) {
-      throw Exception('No photo albums found.');
-    }
-
-    List<Location> photoLocations = [];
-    for (photo.AssetPathEntity album in albums) {
-      List<photo.AssetEntity> userPhotos =
-          await album.getAssetListPaged(page: 0, size: 500);
-
-      for (photo.AssetEntity photoEntity in userPhotos) {
-        if (photoEntity.latitude != null && photoEntity.longitude != null) {
-          photoLocations.add(Location(
-            latitude: photoEntity.latitude!,
-            longitude: photoEntity.longitude!,
-            timestamp: photoEntity.createDateTime.toIso8601String(),
-            closestCity: 'Unknown', // Will be updated later
-          ));
-        }
-      }
-    }
-
-    return photoLocations;
-  }
-
-  /// Show an in-app permission request dialog
-  static void _showPermissionDialog(BuildContext context) {
+  /// Open app settings to grant photo access
+  static Future<void> openSettingsIfNeeded(BuildContext context) async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Photo Access Required'),
-        content: Text(
-            'This app requires access to your photos to provide location-based tracking. Please allow access.'),
+        content: Text('To continue using the app, please grant photo access.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -234,132 +252,12 @@ class CustomPhotoManager {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              photo.PhotoManager.openSetting();
+              PhotoManager.openSetting();
             },
             child: Text('Open Settings'),
           ),
         ],
       ),
     );
-  }
-
-  /// Fetch and plot photo metadata on the map
-  static Future<void> fetchAndPlotPhotoMetadata(
-      BuildContext context, MapManager mapManager, DateTimeRange timeframe) async {
-    if (timeframe == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a timeframe first.')),
-      );
-      return;
-    }
-
-    // Check if MapManager is initialized
-    if (!mapManager.isInitialized) {
-      print("MapManager not initialized yet.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Map is not ready yet. Please try again shortly.')),
-      );
-      return;
-    }
-
-    final photo.PermissionState state =
-        await photo.PhotoManager.requestPermissionExtend();
-    print('Photo permission state: $state');
-
-    if (!state.isAuth) {
-      print('Photo access denied.');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Photo access is required to fetch photos.')),
-      );
-      return;
-    }
-
-    try {
-      List<photo.AssetPathEntity> albums =
-          await photo.PhotoManager.getAssetPathList(
-        type: photo.RequestType.image,
-      );
-
-      if (albums.isEmpty) {
-        print('No photo albums found.');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No photo albums found.')),
-        );
-        return;
-      }
-
-      photo.AssetPathEntity recentAlbum = albums[0];
-      List<photo.AssetEntity> userPhotos =
-          await recentAlbum.getAssetListPaged(page: 0, size: 100);
-
-      if (userPhotos.isEmpty) {
-        print('No photos found in the album.');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No photos found in the album.')),
-        );
-        return;
-      }
-
-      List<Location> photoLocations = [];
-      final start = timeframe.start;
-      final end = timeframe.end;
-
-      for (photo.AssetEntity photoEntity in userPhotos) {
-        if (photoEntity.latitude != null &&
-            photoEntity.longitude != null &&
-            photoEntity.latitude != 0.0 &&
-            photoEntity.longitude != 0.0 &&
-            photoEntity.createDateTime.isAfter(start) &&
-            photoEntity.createDateTime.isBefore(end)) {
-          // Find the closest city using the MapManager instance
-          City? closestCity = mapManager.findClosestCity(
-              photoEntity.latitude!, photoEntity.longitude!);
-
-          // Add photo metadata and closest city to photoLocations
-          photoLocations.add(Location(
-            latitude: photoEntity.latitude!,
-            longitude: photoEntity.longitude!,
-            timestamp: photoEntity.createDateTime.toIso8601String(),
-            closestCity: closestCity?.name ?? 'Unknown',
-          ));
-        } else {
-          print(
-              "Skipping invalid photo: ${photoEntity.latitude}, ${photoEntity.longitude}");
-        }
-      }
-
-      if (photoLocations.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No photos found in the selected timeframe.')),
-        );
-      } else {
-        print("Plotting ${photoLocations.length} locations on the map.");
-        await mapManager.plotLocationsOnMap(photoLocations);
-
-        // Save to Firebase
-        final List<Map<String, dynamic>> firebaseData =
-            photoLocations.map((location) => location.toMap()).toList();
-
-        print("Saving to Firebase: $firebaseData");
-
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          await FirebaseFirestore.instance
-              .collection('user_photos')
-              .doc(user.uid) // Use the actual user's UID
-              .set({'photos': firebaseData}, SetOptions(merge: true));
-
-          print("Photo data with closest city saved to Firebase.");
-        } else {
-          print("No authenticated user found. Cannot save to Firebase.");
-        }
-      }
-    } catch (e, stack) {
-      print('Error fetching photo metadata: $e');
-      print(stack);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching photo metadata.')),
-      );
-    }
   }
 }

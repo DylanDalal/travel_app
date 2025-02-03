@@ -8,8 +8,6 @@ import 'dart:math' as math;
 import 'package:flutter/services.dart' show rootBundle;
 import '../classes.dart'; 
 
-import '../classes.dart';
-
 /// Simple class that manages Mapbox creation & annotation logic
 class MapManager {
   late MapboxMap _mapboxMap;

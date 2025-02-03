@@ -1,21 +1,57 @@
-import 'package:flutter/material.dart';
-import 'package:passport/user_data/data_operations.dart'; // Include DataSaver
+// lib/signup_screen.dart
 
-class SignupScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import '../user_data/data_operations.dart'; // Import DataSaver
+import 'post_signup_options_screen.dart'; // Import the new screen
+
+class SignupScreen extends StatefulWidget {
+  SignupScreen({Key? key}) : super(key: key);
+
+  @override
+  _SignupScreenState createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  SignupScreen({Key? key}) : super(key: key);
+  bool _isLoading = false;
+
+  void _signUp() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    await DataSaver.signUp(
+      email: emailController.text,
+      password: passwordController.text,
+      context: context,
+    );
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    // Navigate to PostSignUpOptionsScreen if sign-up is successful
+    // Assuming signUp method navigates on success
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Sign Up')),
+      appBar: AppBar(title: const Text('Sign Up')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Email TextField
             TextField(
               controller: emailController,
               decoration: InputDecoration(
@@ -25,6 +61,7 @@ class SignupScreen extends StatelessWidget {
               keyboardType: TextInputType.emailAddress,
             ),
             SizedBox(height: 16),
+            // Password TextField
             TextField(
               controller: passwordController,
               decoration: InputDecoration(
@@ -34,19 +71,13 @@ class SignupScreen extends StatelessWidget {
               obscureText: true,
             ),
             SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                //storing credentials via our DataSaver class
-                DataSaver.signUp(
-                  email: emailController.text,
-                  password: passwordController.text,
-                  context: context,
-                );
-
-
-              },
-              child: Text('Sign Up'),
-            ),
+            // Sign Up Button
+            _isLoading
+                ? CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: _signUp,
+                    child: Text('Sign Up'),
+                  ),
           ],
         ),
       ),
