@@ -3,13 +3,11 @@ class Location {
   final double latitude;
   final double longitude;
   final String timestamp;
-  final String? closestCity; // Add this field
 
   Location({
     required this.latitude,
     required this.longitude,
     required this.timestamp,
-    this.closestCity,
   });
 
   Map<String, dynamic> toMap() {
@@ -17,7 +15,6 @@ class Location {
       'latitude': latitude,
       'longitude': longitude,
       'timestamp': timestamp,
-      'closestCity': closestCity,
     };
   }
 }

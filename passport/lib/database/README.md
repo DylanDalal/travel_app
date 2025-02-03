@@ -46,5 +46,6 @@ osmium export south-america.osm.pbf -o south-america.geojson
 I then used the process_geojson script to reduce the information in the geojson and create a streamlined json file.
 This left us with only objects marked as cities and towns with permanent residents.
 
-
 IMPORTANT NOTE: The city names are normalized to standard English characters. This means we lose accents on places like Sao Paulo while storing.
+
+These are 
