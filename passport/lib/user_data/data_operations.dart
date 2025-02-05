@@ -5,9 +5,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:photo_manager/photo_manager.dart';
 import '../trips/map_manager.dart';
-import '../classes.dart'; // Import your data models
+import '../classes.dart'; // Import your data models (Location, etc.)
 import '../utils/permission_utils.dart'; // Import permission utilities if any
 
+// Top-level class DataFetcher
 class DataFetcher {
   /// Fetch photo metadata stored in Firebase for a given timeframe
   static Future<List<Location>> fetchPhotoMetadataFromFirebase(
@@ -39,10 +40,11 @@ class DataFetcher {
     return filteredLocations;
   }
 
-  /// Fetch and plot photo metadata
+  /// Fetch and plot photo metadata from Firebase
   static Future<void> fetchAndPlotPhotoMetadata(
       BuildContext context, MapManager mapManager, DateTimeRange timeframe) async {
     try {
+      print("DataFetcher.fetchAndPlotPhotoMetadata called");
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         throw Exception('No authenticated user found.');
@@ -61,19 +63,22 @@ class DataFetcher {
 
       // Plot locations on the map
       await mapManager.plotLocationsOnMap(photoLocations);
+      print("Markers plotted on map");
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Your trips have been loaded successfully!')),
       );
     } catch (e) {
-      print('Error in fetchAndPlotPhotoMetadata: $e');
+      print('Error in DataFetcher.fetchAndPlotPhotoMetadata: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load trips: $e')),
       );
     }
   }
-}
+} // End of DataFetcher
 
+
+// Top-level class DataSaver
 class DataSaver {
   /// Save photo metadata to Firebase
   static Future<void> savePhotoMetadataToFirebase(
@@ -97,8 +102,8 @@ class DataSaver {
     try {
       print("=============Signup initiated===============\n\n");
       // Create user with Firebase Authentication
-      final userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
         email: email.trim(),
         password: password.trim(),
       );
@@ -115,14 +120,11 @@ class DataSaver {
       });
 
       // Request photo permissions
-      bool photoAccessGranted =
-          await PermissionUtils.requestPhotoPermission();
+      bool photoAccessGranted = await PermissionUtils.requestPhotoPermission();
       if (!photoAccessGranted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Photo access is required to upload your photos.',
-            ),
+            content: Text('Photo access is required to upload your photos.'),
           ),
         );
         await CustomPhotoManager.openSettingsIfNeeded(context);
@@ -142,10 +144,12 @@ class DataSaver {
       );
     }
   }
-}
+} // End of DataSaver
 
+
+// Top-level class CustomPhotoManager
 class CustomPhotoManager {
-  /// Fetch all photo metadata
+  /// Fetch all photo metadata from the device
   static Future<List<Location>> fetchAllPhotoMetadata() async {
     List<Location> locations = [];
     try {
@@ -163,8 +167,7 @@ class CustomPhotoManager {
       );
 
       for (final AssetPathEntity album in albums) {
-        // Fetch all photos in the album
-        // Adjusted to use named parameters if required
+        // Fetch all photos in the album using named parameters
         final List<AssetEntity> photos = await album.getAssetListPaged(page: 0, size: 10000);
         for (final AssetEntity photo in photos) {
           if (photo.latitude != null && photo.longitude != null) {
@@ -172,7 +175,7 @@ class CustomPhotoManager {
             final double longitude = photo.longitude!;
             final DateTime date = photo.createDateTime;
 
-            // Create Location object
+            // Create a Location object (no closestCity needed)
             final Location location = Location(
               latitude: latitude,
               longitude: longitude,
@@ -189,12 +192,12 @@ class CustomPhotoManager {
     return locations;
   }
 
-  /// Fetch and plot photo metadata on the map
+  /// Fetch and plot photo metadata on the map (device-level fetching)
   static Future<void> fetchAndPlotPhotoMetadata(
       BuildContext context, MapManager mapManager, DateTimeRange timeframe) async {
     try {
-      // Fetch photo metadata
-      final List<Location> locations = await fetchAllPhotoMetadata();
+      // Fetch photo metadata from device
+      final List<Location> locations = await CustomPhotoManager.fetchAllPhotoMetadata();
 
       if (locations.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -203,7 +206,7 @@ class CustomPhotoManager {
         return;
       }
 
-      // Optionally, filter locations based on the timeframe
+      // Optionally filter locations based on the timeframe
       final List<Location> filteredLocations = locations.where((location) {
         final DateTime photoDate = DateTime.parse(location.timestamp);
         return photoDate.isAfter(timeframe.start) && photoDate.isBefore(timeframe.end);
@@ -218,8 +221,9 @@ class CustomPhotoManager {
 
       // Plot locations on the map
       await mapManager.plotLocationsOnMap(filteredLocations);
+      print("Markers plotted on map");
 
-      // Save to Firebase if needed
+      // Optionally save to Firebase (if needed)
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         await FirebaseFirestore.instance.collection('user_photos').doc(user.uid).set({
@@ -260,4 +264,4 @@ class CustomPhotoManager {
       ),
     );
   }
-}
+} // End of CustomPhotoManager
