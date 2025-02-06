@@ -17,6 +17,12 @@ import 'trips/trip_detail_view.dart';
 import 'trips/my_trip_list.dart';
 import 'classes.dart'; // For the Location class, etc.
 
+// Import data_operations.dart
+import 'package:passport/user_data/data_operations.dart';
+
+// Import dart:async for Timer
+import 'dart:async';
+
 class MyTripsSection extends StatefulWidget {
   final MapManager mapManager;
 
@@ -39,7 +45,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   DateTimeRange? timeframe;
   final TextEditingController titleController = TextEditingController();
   List<Map<String, dynamic>> trips = [];
-  List<Location> photoLocations = [];
   String? editingTripId;
   Map<String, dynamic>? selectedTrip;
 
@@ -50,9 +55,13 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   // Map
   late MapManager mapManager;
 
-@override
+  // State variable to track map initialization
+  bool isMapInitialized = false;
+
+  @override
   void initState() {
     super.initState();
+    mapManager = widget.mapManager;
     _loadTrips(); // Load trips from Firestore
   }
 
@@ -81,83 +90,20 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   // ---------------------
   void _onMapCreated(MapboxMap map) {
     widget.mapManager.initializeMapManager(map);
+    _checkMapInitialization();
   }
 
-  Future<void> fetchAndPlotPhotoMetadata() async {
-    if (timeframe == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a timeframe first.')),
-      );
-      return;
-    }
-    final photo.PermissionState state =
-        await photo.PhotoManager.requestPermissionExtend();
-    if (!state.isAuth) {
-      print('Photo access denied.');
-      return;
-    }
-
-    try {
-      List<photo.AssetPathEntity> albums = await photo.PhotoManager.getAssetPathList(
-        type: photo.RequestType.image,
-      );
-      if (albums.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No photo albums found.')),
-        );
-        return;
+  void _checkMapInitialization() {
+    const Duration checkInterval = Duration(milliseconds: 100);
+    Timer.periodic(checkInterval, (timer) {
+      if (widget.mapManager.isInitialized) {
+        setState(() {
+          isMapInitialized = true;
+          print("MapManager is initialized: $isMapInitialized");
+        });
+        timer.cancel();
       }
-
-      photo.AssetPathEntity recentAlbum = albums[0];
-      List<photo.AssetEntity> userPhotos =
-          await recentAlbum.getAssetListPaged(page: 0, size: 100);
-
-      if (userPhotos.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No photos found in the album.')),
-        );
-        return;
-      }
-
-      photoLocations.clear();
-      final start = timeframe!.start;
-      final end = timeframe!.end;
-
-      for (photo.AssetEntity photoEntity in userPhotos) {
-        if (photoEntity.latitude != null &&
-            photoEntity.longitude != null &&
-            photoEntity.createDateTime.isAfter(start) &&
-            photoEntity.createDateTime.isBefore(end)) {
-          photoLocations.add(Location(
-            latitude: photoEntity.latitude!,
-            longitude: photoEntity.longitude!,
-            timestamp: photoEntity.createDateTime.toIso8601String(),
-          ));
-
-          print('Photo Metadata:');
-          print('  File Name: ${photoEntity.title}');
-          print('  Latitude: ${photoEntity.latitude}');
-          print('  Longitude: ${photoEntity.longitude}');
-          print('  Created At: ${photoEntity.createDateTime}');
-          print('  Modified At: ${photoEntity.modifiedDateTime}');
-          print('  Asset ID: ${photoEntity.id}');
-        }
-    }
-
-
-      if (photoLocations.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No photos found in the selected timeframe.')),
-        );
-      } else {
-        widget.mapManager.plotLocationsOnMap(photoLocations);
-      }
-    } catch (e) {
-      print('Error fetching photo metadata: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching photo metadata.')),
-      );
-    }
+    });
   }
 
   // ---------------------
@@ -183,7 +129,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         trips = updated;
         titleController.clear();
         timeframe = null;
-        photoLocations.clear();
         isCreatingTrip = false;
         currentChildSize = 0.25;
       });
@@ -214,7 +159,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         editingTripId = null;
         titleController.clear();
         timeframe = null;
-        photoLocations.clear();
         isEditingTrip = false;
         currentChildSize = 0.25;
       });
@@ -235,10 +179,11 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     // We'll pick a default name based on earliest trip, etc.
     // Then show a Cupertino dialog to gather a final name
     // After user chooses "Merge & Keep" or "Merge & Delete," we call below:
-    _performTripMerge( /* userTitle */ "Merged Trip", /* deleteOldTrips */ false);
+    _performTripMerge("Merged Trip", false);
   }
 
-  Future<void> _performTripMerge(String mergedTripName, bool deleteOldTrips) async {
+  Future<void> _performTripMerge(
+      String mergedTripName, bool deleteOldTrips) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -395,12 +340,18 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       children: [
         // The map
         MapWidget(
+          key: ValueKey('unique_map_widget'),
           cameraOptions: CameraOptions(
             center: Point(coordinates: Position(0, 0)),
             zoom: 2.0,
           ),
           onMapCreated: _onMapCreated,
         ),
+        // Show loading indicator if map is not initialized
+        if (!isMapInitialized)
+          Center(
+            child: CircularProgressIndicator(),
+          ),
         // Draggable sheet
         DraggableScrollableSheet(
           initialChildSize: currentChildSize,
@@ -523,7 +474,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                       isCreatingTrip = false;
                       titleController.clear();
                       timeframe = null;
-                      photoLocations.clear();
                       editingTripId = null;
                     }
                     if (isEditingTrip) {
@@ -531,7 +481,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                       editingTripId = null;
                       titleController.clear();
                       timeframe = null;
-                      photoLocations.clear();
                     }
                     currentChildSize = 0.25;
                   });
@@ -547,7 +496,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                     isViewingTrip = false;
                     titleController.clear();
                     timeframe = null;
-                    photoLocations.clear();
                     editingTripId = null;
                     currentChildSize = 0.5;
                   });
@@ -572,9 +520,15 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       return EditTripScreen(
         titleController: titleController,
         timeframe: timeframe,
-        photoLocations: photoLocations,
+        photoLocations: [], // Removed photoLocations as it's handled by data_operations.dart
         onPickDateRange: _pickDateRange,
-        onFetchMetadata: fetchAndPlotPhotoMetadata,
+        onFetchMetadata: () {
+          CustomPhotoManager.fetchAndPlotPhotoMetadata(
+            context,
+            mapManager,
+            timeframe!,
+          );
+        },
         onUpdateTrip: _updateTrip,
         onSplitDate: _performTripSplit,
       );
@@ -583,9 +537,15 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       return CreateTripScreen(
         titleController: titleController,
         timeframe: timeframe,
-        photoLocations: photoLocations,
+        photoLocations: [], // Removed photoLocations as it's handled by data_operations.dart
         onPickDateRange: _pickDateRange,
-        onFetchMetadata: fetchAndPlotPhotoMetadata,
+        onFetchMetadata: () {
+          CustomPhotoManager.fetchAndPlotPhotoMetadata(
+            context,
+            mapManager,
+            timeframe!,
+          );
+        },
         onSaveTrip: _createTrip,
       );
     } else if (isViewingTrip && selectedTrip != null) {
@@ -601,7 +561,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
           widget.mapManager.zoomBackOut();
           widget.mapManager.setViewingTrip(false);
         },
-
       );
     } else {
       // Show the main MyTripList
@@ -635,7 +594,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
           // Pre-fill
           final title = trip['title'] ?? '';
           final startIso = trip['timeframe']?['start'] ?? '';
-          final endIso   = trip['timeframe']?['end']   ?? '';
+          final endIso = trip['timeframe']?['end'] ?? '';
           titleController.text = title;
           if (startIso.isNotEmpty && endIso.isNotEmpty) {
             final s = DateTime.parse(startIso);
