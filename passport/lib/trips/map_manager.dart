@@ -239,33 +239,6 @@ void setViewingTrip(bool isViewing) {
     _startRotatingGlobe();
   }
 
-/// Find the closest city in [allCities] to the given [lat]/[lon].
-/// Returns `null` if no cities are loaded.
-City? findClosestCity(double lat, double lon) {
-  if (allCities.isEmpty) {
-    print('No cities loaded. Did you call loadAllCityDatasets()?');
-    return null;
-  }
-
-  City? closestCity;
-  double minDistance = double.infinity;
-
-  for (final city in allCities) {
-    final distance = haversineDistance(lat, lon, city.latitude, city.longitude);
-    if (distance < minDistance) {
-      minDistance = distance;
-      closestCity = city;
-    }
-  }
-
-  if (closestCity != null) {
-    print('Closest city to ($lat, $lon) is ${closestCity.name} at distance ${minDistance.toStringAsFixed(2)} km.');
-  } else {
-    print('No closest city found for ($lat, $lon).');
-  }
-
-  return closestCity;
-}
 
 /// Load city data from multiple JSON files (e.g., 7 continents + Central America)
 Future<void> loadAllCityDatasets() async {
@@ -306,20 +279,6 @@ Future<void> loadAllCityDatasets() async {
   }
 
   print('Loaded ${allCities.length} total cities from datasets.');
-}
-
-/// Calculate Haversine distance in kilometers.
-double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
-  const double R = 6371; // Earth's radius in kilometers
-  final double dLat = _toRadians(lat2 - lat1);
-  final double dLon = _toRadians(lon2 - lon1);
-
-  final double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-      math.cos(_toRadians(lat1)) * math.cos(_toRadians(lat2)) *
-          math.sin(dLon / 2) * math.sin(dLon / 2);
-
-  final double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-  return R * c;
 }
 
 double _toRadians(double deg) => deg * (math.pi / 180.0);
