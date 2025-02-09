@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:passport/trips/map_manager.dart';
 import 'package:passport/user_data/data_operations.dart';
 import 'package:passport/utils/photo_trip_service.dart';
@@ -22,23 +23,21 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  List<Location> photoLocations = [];
   late MapManager _mapManager;
   late PhotoTripService _photoTripService;
 
-  bool _dataFetched = false; // Add a flag to prevent re-fetching
+  bool _dataFetched = false; // track if we've already loaded data
 
   @override
   void initState() {
     super.initState();
+
     _mapManager = MapManager(
       onPlotComplete: () {
         print('Map plotting completed successfully.');
-        if (!_dataFetched) {
-          _fetchStoredPhotoData(FirebaseAuth.instance.currentUser!.uid);
-        }
       },
     );
+
     _photoTripService = PhotoTripService(mapManager: _mapManager);
     _initializeUserData();
   }
@@ -49,59 +48,53 @@ class HomeScreenState extends State<HomeScreen> {
 
     print("Checking user data for: ${user.uid}");
     bool isFirstLogin = await _checkIfFirstLogin(user.uid);
-    if (isFirstLogin && !widget.isManual) {
-      // If the user is not using manual loading, ensure photo data is handled
-      // This scenario might not occur based on the new flow
-    } else {
-      print("Existing user, plotting stored photos.");
-      if (!_dataFetched) {
-        _fetchStoredPhotoData(user.uid);
-      }
+    if (!isFirstLogin && !_dataFetched) {
+      // We'll rely on MyTripsSection's map initialization
+      // Then fetch data once the map is ready.
+      // No immediate data fetch here.
     }
   }
 
   Future<bool> _checkIfFirstLogin(String userId) async {
     try {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      final userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(userId).get();
       if (userDoc.exists && userDoc.data()?['hasPhotoMetadata'] == true) {
         return false; // Not first login
       }
-      return true; // First login
+      return true; // Possibly first login
     } catch (e) {
       print("Error checking first login: $e");
       return false;
     }
   }
 
-  Future<void> _fetchStoredPhotoData(String userId) async {
+  // Called by MyTripsSection once the map is definitely initialized
+  // (so we can't skip plotting)
+  void fetchDataWhenMapIsReady() {
     if (_dataFetched) {
       print("Data already fetched, skipping re-fetch.");
       return;
     }
+    _dataFetched = true;
 
-    if (!_mapManager.isInitialized) {
-      print("Waiting for MapManager to initialize...");
-      await Future.delayed(Duration(seconds: 2));
-      _fetchStoredPhotoData(userId);
-      return;
-    }
-
-    _dataFetched = true; // Set the flag after fetching to prevent looping
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
     final DateTimeRange timeframe = DateTimeRange(
-      start: DateTime.now().subtract(Duration(days: 10000)),
+      start: DateTime.now().subtract(const Duration(days: 365)),
       end: DateTime.now(),
     );
 
-    print("Fetching and plotting photo data for user: $userId");
+    print("Map is initialized; fetching & plotting photo data for user: ${user.uid}");
 
-    try {
-      await CustomPhotoManager.fetchAndPlotPhotoMetadata(context, _mapManager, timeframe);
-      print("Photo data fetched and plotted successfully.");
-    } catch (e) {
+    // We'll call the function that plots photos:
+    CustomPhotoManager.fetchAndPlotPhotoMetadata(context, _mapManager, timeframe)
+        .then((_) => print("Photo data fetched and plotted successfully."))
+        .catchError((e) {
       print('Error fetching and plotting photo data: $e');
-      _dataFetched = false; // Reset flag on failure
-    }
+      _dataFetched = false;
+    });
   }
 
   Future<void> _logout(BuildContext context) async {
@@ -114,11 +107,11 @@ class HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: const Text('Home'),
         automaticallyImplyLeading: false,
         actions: [
           PopupMenuButton<String>(
-            icon: Icon(Icons.account_circle),
+            icon: const Icon(Icons.account_circle),
             onSelected: (value) {
               if (value == 'Profile') {
                 Navigator.pushNamed(context, '/profile');
@@ -128,7 +121,7 @@ class HomeScreenState extends State<HomeScreen> {
                 _logout(context);
               }
             },
-            itemBuilder: (BuildContext context) => [
+            itemBuilder: (BuildContext context) => const [
               PopupMenuItem(value: 'Profile', child: Text('Profile')),
               PopupMenuItem(value: 'Settings', child: Text('Settings')),
               PopupMenuItem(value: 'Logout', child: Text('Logout')),
@@ -137,16 +130,18 @@ class HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: _currentIndex == 0
-          ? MyTripsSection(mapManager: _mapManager)
-          : FriendsSection(),
+          ? MyTripsSection(
+              mapManager: _mapManager,
+              // We pass a callback that calls fetchDataWhenMapIsReady()
+              onMapInitialized: fetchDataWhenMapIsReady,
+            )
+          : FriendsSection(), // Remove `const` if you have no const constructor
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: [
+        onTap: (index) => setState(() {
+          _currentIndex = index;
+        }),
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'My Trips'),
           BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Friends'),
         ],
