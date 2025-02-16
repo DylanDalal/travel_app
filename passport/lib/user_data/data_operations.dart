@@ -246,191 +246,137 @@ class CustomPhotoManager {
 
   /// Fetch and plot photo metadata on the map (device-level fetching).
   /// Called ONLY if user opts to "Automatically Load Trips."
-static Future<void> fetchAndPlotPhotoMetadata(
-  BuildContext context,
-  MapManager mapManager,
-  DateTimeRange timeframe,
-) async {
-  if (timeframe == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please select a timeframe first.')),
-    );
-    return;
-  }
-
-  final photo_manager.PermissionState state =
-      await photo_manager.PhotoManager.requestPermissionExtend();
-  print('Photo permission state: $state');
-
-  if (!state.isAuth) {
-    print('Photo access denied.');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Photo access is required to fetch photos.')),
-    );
-    return;
-  }
-
-  try {
-    // 1) Load all cities so that findClosestCity works.
-    await loadAllCityDatasets();
-
-    // 2) Print user hometowns
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      print("No authenticated user found. Cannot fetch hometowns.");
-      return;
-    }
-    final userDoc =
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-    final hometowns = userDoc.data()?['hometowns'] as List<dynamic>? ?? [];
-    print("User's hometowns: $hometowns");
-
-    // 3) Get all albums & photos
-    final List<photo_manager.AssetPathEntity> albums =
-        await photo_manager.PhotoManager.getAssetPathList(
-      type: photo_manager.RequestType.image,
-    );
-
-    if (albums.isEmpty) {
-      print('No photo albums found.');
+  static Future<void> fetchAndPlotPhotoMetadata(
+    BuildContext context,
+    MapManager mapManager,
+    DateTimeRange timeframe,
+  ) async {
+    if (timeframe == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No photo albums found.')),
+        const SnackBar(content: Text('Please select a timeframe first.')),
       );
       return;
     }
 
-    // For simplicity, pick the first album
-    final photo_manager.AssetPathEntity recentAlbum = albums[0];
-    final List<photo_manager.AssetEntity> userPhotos =
-        await recentAlbum.getAssetListPaged(page: 0, size: 100);
+    final photo_manager.PermissionState state =
+        await photo_manager.PhotoManager.requestPermissionExtend();
+    print('Photo permission state: $state');
 
-    if (userPhotos.isEmpty) {
-      print('No photos found in the album.');
+    if (!state.isAuth) {
+      print('Photo access denied.');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No photos found in the album.')),
+        const SnackBar(content: Text('Photo access is required to fetch photos.')),
       );
       return;
     }
 
-    // 4) Filter userPhotos by timeframe and build a list of photo locations
-    List<Location> photoLocations = [];
-    final start = timeframe.start;
-    final end = timeframe.end;
+    try {
+      // 1) Load all cities
+      await loadAllCityDatasets();
 
-    for (final photo_manager.AssetEntity photoEntity in userPhotos) {
-      final lat = photoEntity.latitude ?? 0.0;
-      final lon = photoEntity.longitude ?? 0.0;
-      final createTime = photoEntity.createDateTime;
+      // 2) Print user hometowns
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print("No authenticated user found. Cannot fetch hometowns.");
+        return;
+      }
 
-      if (lat != 0.0 &&
-          lon != 0.0 &&
-          createTime.isAfter(start) &&
-          createTime.isBefore(end)) {
-        // Find closest city for this photo
-        final city = findClosestCity(lat, lon);
-        final cityName = city?.name ?? 'Unknown';
+      final userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final hometowns = userDoc.data()?['hometowns'] as List<dynamic>? ?? [];
+      print("User's hometowns: $hometowns");
 
-        print("Fetched photo: $lat, $lon  Closest City: $cityName");
+      // 3) Get all albums & photos
+      final List<photo_manager.AssetPathEntity> albums =
+          await photo_manager.PhotoManager.getAssetPathList(
+        type: photo_manager.RequestType.image,
+      );
 
-        photoLocations.add(
-          Location(
-            latitude: lat,
-            longitude: lon,
-            timestamp: createTime.toIso8601String(),
-          ),
+      if (albums.isEmpty) {
+        print('No photo albums found.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No photo albums found.')),
         );
-      } else {
-        print("Skipping invalid/out-of-range photo: $lat, $lon");
+        return;
       }
-    }
 
-    if (photoLocations.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No photos found in the selected timeframe.')),
-      );
-      return;
-    }
+      // For simplicity, pick the first album
+      final photo_manager.AssetPathEntity recentAlbum = albums[0];
+      final List<photo_manager.AssetEntity> userPhotos =
+          await recentAlbum.getAssetListPaged(page: 0, size: 100);
 
-    print("Plotting ${photoLocations.length} locations on the map.");
-    await mapManager.plotLocationsOnMap(photoLocations);
-    print("Markers plotted on map");
-
-    // 5) Build "trips" from [photoLocations], grouping photos if they are within 7 days of each other.
-    photoLocations.sort((a, b) =>
-        DateTime.parse(a.timestamp).compareTo(DateTime.parse(b.timestamp)));
-
-    final List<Map<String, dynamic>> trips = [];
-    Map<String, dynamic>? currentTrip;
-    List<String> currentTripCities = [];
-    final int dayGap = 7;
-    DateTime? lastPhotoTime;
-
-    // Helper function to compute a trip title from distinct city names.
-    String _computeTripTitle(List<String> cities) {
-      final distinct = <String>[];
-      for (final city in cities) {
-        if (!distinct.contains(city)) distinct.add(city);
+      if (userPhotos.isEmpty) {
+        print('No photos found in the album.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No photos found in the album.')),
+        );
+        return;
       }
-      if (distinct.length == 1) {
-        return distinct[0];
-      } else if (distinct.length == 2) {
-        return "${distinct[0]} and ${distinct[1]}";
-      } else if (distinct.length >= 3) {
-        return "${distinct.first} to ${distinct.last}";
-      }
-      return "Untitled Trip";
-    }
 
-    for (int i = 0; i < photoLocations.length; i++) {
-      final loc = photoLocations[i];
-      final thisPhotoTime = DateTime.parse(loc.timestamp);
-      // Compute city name for this photo.
-      final city = findClosestCity(loc.latitude, loc.longitude);
-      final cityName = city?.name ?? 'Unknown';
+      // 4) Filter userPhotos by timeframe, gather into [photoLocations]
+      List<Location> photoLocations = [];
+      final start = timeframe.start;
+      final end = timeframe.end;
 
-      if (currentTrip == null) {
-        // Start a new trip.
-        currentTripCities = [cityName];
-        currentTrip = {
-          'id': _generateTripId(), // e.g. "#a1b2c"
-          'title': '', // to be updated below
-          'timeframe': {
-            'start': loc.timestamp,
-            'end': loc.timestamp,
-          },
-          'locations': [
-            {
-              'latitude': loc.latitude,
-              'longitude': loc.longitude,
-              'timestamp': loc.timestamp,
-            }
-          ],
-        };
-        lastPhotoTime = thisPhotoTime;
-      } else {
-        final difference = thisPhotoTime.difference(lastPhotoTime!).inDays;
-        if (difference.abs() <= dayGap) {
-          // Photo belongs to current trip.
-          currentTrip['locations'].add({
-            'latitude': loc.latitude,
-            'longitude': loc.longitude,
-            'timestamp': loc.timestamp,
-          });
-          // Update the trip's end date.
-          currentTrip['timeframe']['end'] = loc.timestamp;
-          // Add city if it's not already in the list.
-          if (!currentTripCities.contains(cityName)) {
-            currentTripCities.add(cityName);
-          }
+      for (final photo_manager.AssetEntity photoEntity in userPhotos) {
+        final lat = photoEntity.latitude ?? 0.0;
+        final lon = photoEntity.longitude ?? 0.0;
+        final createTime = photoEntity.createDateTime;
+
+        if (lat != 0.0 &&
+            lon != 0.0 &&
+            createTime.isAfter(start) &&
+            createTime.isBefore(end)) {
+          // Find city
+          final city = findClosestCity(lat, lon);
+          final cityName = city?.name ?? 'Unknown';
+
+          print("Fetched photo: $lat, $lon  Closest City: $cityName");
+
+          photoLocations.add(
+            Location(
+              latitude: lat,
+              longitude: lon,
+              timestamp: createTime.toIso8601String(),
+            ),
+          );
         } else {
-          // Time gap too big: finish current trip.
-          currentTrip['title'] = _computeTripTitle(currentTripCities);
-          trips.add(currentTrip);
-          // Start a new trip.
-          currentTripCities = [cityName];
+          print("Skipping invalid/out-of-range photo: $lat, $lon");
+        }
+      }
+
+      if (photoLocations.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No photos found in the selected timeframe.')),
+        );
+        return;
+      }
+
+      print("Plotting ${photoLocations.length} locations on the map.");
+      await mapManager.plotLocationsOnMap(photoLocations);
+      print("Markers plotted on map");
+
+      // 5) Build "trips" from [photoLocations], grouped by 7-day gaps
+      photoLocations.sort((a, b) =>
+          DateTime.parse(a.timestamp).compareTo(DateTime.parse(b.timestamp)));
+
+      final List<Map<String, dynamic>> trips = [];
+      Map<String, dynamic>? currentTrip;
+      final int dayGap = 7;
+      DateTime? lastPhotoTime;
+
+      for (int i = 0; i < photoLocations.length; i++) {
+        final loc = photoLocations[i];
+        final thisPhotoTime = DateTime.parse(loc.timestamp);
+
+        if (currentTrip == null) {
+          // Create first trip
+          final city = findClosestCity(loc.latitude, loc.longitude);
+          final cityName = city?.name ?? 'Unknown';
+
           currentTrip = {
-            'id': _generateTripId(),
-            'title': '', // will update later
+            'id': _generateTripId(), // e.g. "#a1b2c"
+            'title': cityName,
             'timeframe': {
               'start': loc.timestamp,
               'end': loc.timestamp,
@@ -443,43 +389,78 @@ static Future<void> fetchAndPlotPhotoMetadata(
               }
             ],
           };
+          lastPhotoTime = thisPhotoTime;
+        } else {
+          // Check date difference
+          final difference = thisPhotoTime.difference(lastPhotoTime!).inDays;
+          if (difference.abs() <= dayGap) {
+            // Belongs to current trip
+            currentTrip['locations'].add({
+              'latitude': loc.latitude,
+              'longitude': loc.longitude,
+              'timestamp': loc.timestamp,
+            });
+            // Update end date
+            currentTrip['timeframe']['end'] = loc.timestamp;
+          } else {
+            // Finish current trip, add to trips
+            trips.add(currentTrip);
+            // Start a new trip
+            final city = findClosestCity(loc.latitude, loc.longitude);
+            final cityName = city?.name ?? 'Unknown';
+
+            currentTrip = {
+              'id': _generateTripId(),
+              'title': cityName,
+              'timeframe': {
+                'start': loc.timestamp,
+                'end': loc.timestamp,
+              },
+              'locations': [
+                {
+                  'latitude': loc.latitude,
+                  'longitude': loc.longitude,
+                  'timestamp': loc.timestamp,
+                }
+              ],
+            };
+          }
+          lastPhotoTime = thisPhotoTime;
         }
-        lastPhotoTime = thisPhotoTime;
       }
+
+      // Add the last trip
+      if (currentTrip != null) {
+        trips.add(currentTrip);
+      }
+
+      print("Created ${trips.length} trips.");
+
+      // 6) Save trips to Firebase: 'users/{uid}/trips'
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'trips': trips,
+      }, SetOptions(merge: true));
+
+      print("Trips saved to 'users/{uid}/trips'.");
+
+    } catch (e) {
+      print('Error fetching photo metadata: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error fetching photo metadata.')),
+      );
     }
+  }
 
-    // Add the last trip, if it exists.
-    if (currentTrip != null) {
-      currentTrip['title'] = _computeTripTitle(currentTripCities);
-      trips.add(currentTrip);
+  /// Private helper to generate a random trip ID like "#a1b2c"
+  static String _generateTripId() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final rnd = math.Random();
+    final sb = StringBuffer('#');
+    for (int i = 0; i < 5; i++) {
+      sb.write(chars[rnd.nextInt(chars.length)]);
     }
-
-    print("Created ${trips.length} trips.");
-
-    // 6) Save trips to Firebase under 'users/{uid}/trips'
-    await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-      'trips': trips,
-    }, SetOptions(merge: true));
-
-    print("Trips saved to 'users/{uid}/trips'.");
-  } catch (e) {
-    print('Error fetching photo metadata: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Error fetching photo metadata.')),
-    );
+    return sb.toString();
   }
-}
-
-/// Private helper to generate a random trip ID like "#a1b2c"
-static String _generateTripId() {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  final rnd = math.Random();
-  final sb = StringBuffer('#');
-  for (int i = 0; i < 5; i++) {
-    sb.write(chars[rnd.nextInt(chars.length)]);
-  }
-  return sb.toString();
-}
 
   /// Open app settings to grant photo access
   static Future<void> openSettingsIfNeeded(BuildContext context) async {

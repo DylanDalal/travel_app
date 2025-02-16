@@ -15,20 +15,17 @@ class MapManager {
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
 
-  //variables for checking status of various items
   final VoidCallback onPlotComplete;
   Timer? _rotationTimer;
   Timer? _interactionTimer;
   bool _userInteracted = false;
   bool _viewingTrip = false;
   double _rotationAngle = 0.0;
-  CameraState? _lastCameraState; //state of camera after user interaction
+  CameraState? _lastCameraState;
   double _previousZoomLevel = 1.5;
 
-/// Callback for any post-plot logic
   MapManager({required this.onPlotComplete});
 
-  /// A global list to store all cities from multiple continents
   List<City> allCities = [];
   /// TOOD: MAKE GLOBE SPIN, DETECT USER INTERACTION
   ///      _startRotatingGlobe();
@@ -143,56 +140,56 @@ void setViewingTrip(bool isViewing) {
   }
 
   /// Plot a list of photo locations
-  Future<void> plotLocationsOnMap(List<Location> locations) async {
+Future<void> plotLocationsOnMap(List<Location> locations) async {
     if (!isInitialized) {
       print("MapManager not initialized yet.");
       return;
     }
 
     try {
-      print("Starting to plot ${locations.length} locations...");
+      print("Starting to process ${locations.length} locations...");
 
-      // Clear existing markers
-      await _pointAnnotationManager.deleteAll();
-      print("Deleted existing markers.");
+      // Commented out: Clearing existing markers
+      // await _pointAnnotationManager.deleteAll();
+      // print("Deleted existing markers.");
 
       List<Location> validLocations = locations
           .where((loc) => loc.latitude != 0.0 && loc.longitude != 0.0)
           .toList();
 
       if (validLocations.isEmpty) {
-        print("No valid locations to plot.");
+        print("No valid locations to process.");
         return;
       }
 
+      // Commented out: Preloading and plotting pins
+      // final ByteData bytes = await rootBundle.load('lib/assets/pin.png');
+      // final Uint8List imageData = bytes.buffer.asUint8List();
+
       for (var loc in validLocations) {
         try {
-          final ByteData bytes = await rootBundle.load('lib/assets/pin.png');
-          final Uint8List imageData = bytes.buffer.asUint8List();
-
-          await _pointAnnotationManager.create(
-            PointAnnotationOptions(
-              geometry:
-                  Point(coordinates: Position(loc.longitude, loc.latitude)),
-              image: imageData,
-              iconSize: 0.05,
-            ),
-          );
-
-          print("Plotted pin at (${loc.latitude}, ${loc.longitude})");
+          // Commented out: Creating map markers
+          // await _pointAnnotationManager.create(
+          //   PointAnnotationOptions(
+          //     geometry: Point(coordinates: Position(loc.longitude, loc.latitude)),
+          //     image: imageData,
+          //     iconSize: 0.05,
+          //   ),
+          // );
+          print("Processed location (${loc.latitude}, ${loc.longitude})");
         } catch (e) {
-          print(
-              'Error creating marker at (${loc.latitude}, ${loc.longitude}): $e');
+          print('Error processing location (${loc.latitude}, ${loc.longitude}): $e');
         }
       }
 
-      print("Pins plotted successfully.");
-
+      print("Locations processed successfully without rendering pins.");
       onPlotComplete();
     } catch (e) {
-      print("Error plotting locations: $e");
+      print("Error processing locations: $e");
     }
   }
+
+
 
 
 

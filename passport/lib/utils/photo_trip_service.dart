@@ -69,6 +69,7 @@ class PhotoTripService {
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
       );
+      print("PENIS PENIS PENIS PENIS");
     } else if (photo.PermissionState.limited == photo.PermissionState.limited) {
       print('Photo access is limited.');
       ScaffoldMessenger.of(context).showSnackBar(
