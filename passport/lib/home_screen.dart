@@ -34,7 +34,7 @@ class HomeScreenState extends State<HomeScreen> {
 
     _mapManager = MapManager(
       onPlotComplete: () {
-        print('Map plotting completed successfully.');
+        print('Map plotting completed successfully (skipped).');
       },
     );
 
@@ -51,7 +51,6 @@ class HomeScreenState extends State<HomeScreen> {
     if (!isFirstLogin && !_dataFetched) {
       // We'll rely on MyTripsSection's map initialization
       // Then fetch data once the map is ready.
-      // No immediate data fetch here.
     }
   }
 
@@ -86,15 +85,15 @@ class HomeScreenState extends State<HomeScreen> {
       end: DateTime.now(),
     );
 
-    print("Map is initialized; fetching & plotting photo data for user: ${user.uid}");
+    print("Map is initialized; skipping actual plotting of photo data.");
 
-    // We'll call the function that plots photos:
-    CustomPhotoManager.fetchAndPlotPhotoMetadata(context, _mapManager, timeframe)
-        .then((_) => print("Photo data fetched and plotted successfully."))
-        .catchError((e) {
-      print('Error fetching and plotting photo data: $e');
-      _dataFetched = false;
-    });
+    // SKIPPED: 
+    // CustomPhotoManager.fetchAndPlotPhotoMetadata(context, _mapManager, timeframe)
+    //     .then((_) => print("Photo data fetched and plotted successfully (skipped)."))
+    //     .catchError((e) {
+    //   print('Error fetching and plotting photo data: $e');
+    //   _dataFetched = false;
+    // });
   }
 
   Future<void> _logout(BuildContext context) async {
@@ -132,10 +131,9 @@ class HomeScreenState extends State<HomeScreen> {
       body: _currentIndex == 0
           ? MyTripsSection(
               mapManager: _mapManager,
-              // We pass a callback that calls fetchDataWhenMapIsReady()
               onMapInitialized: fetchDataWhenMapIsReady,
             )
-          : FriendsSection(), // Remove `const` if you have no const constructor
+          : FriendsSection(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() {

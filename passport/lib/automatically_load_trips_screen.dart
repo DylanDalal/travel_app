@@ -114,11 +114,13 @@ class _AutomaticallyLoadTripsScreenState extends State<AutomaticallyLoadTripsScr
       timeframe,
     );
 
+    print("BOOBS BOOBS BOOBS BIG FAT KNOCKER BOOBS");
     // Navigate to HomeScreen
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => HomeScreen()),
     );
+    print("BINGO BINGO BINGO");
   }
 
   @override

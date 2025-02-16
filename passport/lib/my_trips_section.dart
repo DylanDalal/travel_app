@@ -1,5 +1,3 @@
-// lib/my_trips_section.dart
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -27,12 +25,12 @@ class MyTripsSection extends StatefulWidget {
   final MapManager mapManager;
 
   /// Add this so HomeScreen can specify `onMapInitialized: fetchDataWhenMapIsReady`
-  final VoidCallback? onMapInitialized; 
+  final VoidCallback? onMapInitialized;
 
   MyTripsSection({
     Key? key,
     required this.mapManager,
-    this.onMapInitialized, // make it optional
+    this.onMapInitialized,
   }) : super(key: key);
 
   @override
@@ -57,7 +55,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   late MapManager mapManager;
   bool isMapInitialized = false;
 
-
   @override
   void initState() {
     super.initState();
@@ -81,8 +78,11 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
   }
 
+  // We uncomment this line so the map is initialized,
+  // but all other Mapbox calls remain commented.
   void _onMapCreated(MapboxMap map) {
     widget.mapManager.initializeMapManager(map);
+    print("Map created. Manager initialization called.");
     _checkMapInitialization();
   }
 
@@ -92,11 +92,10 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       if (widget.mapManager.isInitialized) {
         setState(() {
           isMapInitialized = true;
-          print("MapManager is initialized: $isMapInitialized");
+          print("MapManager is 'initialized': $isMapInitialized (map created).");
         });
         timer.cancel();
 
-        // Once map is ready, invoke the callback if provided
         widget.onMapInitialized?.call();
       }
     });
@@ -315,14 +314,15 @@ class _MyTripsSectionState extends State<MyTripsSection> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        MapWidget(
-          key: const ValueKey('unique_map_widget'),
-          cameraOptions: CameraOptions(
-            center: Point(coordinates: Position(0, 0)),
-            zoom: 2.0,
-          ),
-          onMapCreated: _onMapCreated,
-        ),
+        // If you want the actual map displayed again, uncomment below:
+        // MapWidget(
+        //   key: const ValueKey('unique_map_widget'),
+        //   cameraOptions: CameraOptions(
+        //     center: Point(coordinates: Position(0, 0)),
+        //     zoom: 2.0,
+        //   ),
+        //   onMapCreated: _onMapCreated,
+        // ),
 
         if (!isMapInitialized)
           const Center(child: CircularProgressIndicator()),
@@ -374,7 +374,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       ],
     );
   }
-
 
   Widget _buildTopRow() {
     if (isSelecting) {
@@ -505,11 +504,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             );
             return;
           }
-          CustomPhotoManager.fetchAndPlotPhotoMetadata(
-            context,
-            mapManager,
-            timeframe!,
-          );
+          print("Skipped fetchAndPlotPhotoMetadata.");
         },
         onUpdateTrip: _updateTrip,
         onSplitDate: _performTripSplit,
@@ -533,11 +528,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             );
             return;
           }
-          CustomPhotoManager.fetchAndPlotPhotoMetadata(
-            context,
-            mapManager,
-            timeframe!,
-          );
+          print("Skipped fetchAndPlotPhotoMetadata.");
         },
         onSaveTrip: _createTrip,
       );
@@ -550,8 +541,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             selectedTrip = null;
             currentChildSize = 0.25;
           });
-          widget.mapManager.zoomBackOut();
-          widget.mapManager.setViewingTrip(false);
+          print("Skipped zoomBackOut and setViewingTrip.");
         },
       );
     } else {
@@ -568,14 +558,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             isCreatingTrip = false;
             currentChildSize = 0.5;
           });
-          widget.mapManager.setViewingTrip(false);
-          if (trip['locations'] != null && trip['locations'].isNotEmpty) {
-            final firstLocation = trip['locations'][0];
-            widget.mapManager.flyToLocation(
-              firstLocation['latitude'],
-              firstLocation['longitude'],
-            );
-          }
+          print("Skipped setViewingTrip and flyToLocation.");
         },
         onEditTrip: (trip) {
           final title = trip['title'] ?? '';
