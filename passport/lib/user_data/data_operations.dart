@@ -101,7 +101,6 @@ class DataSaver {
       // No photo permissions or metadata saving here.
       // We simply navigate the user to the next screen.
       Navigator.pushReplacementNamed(context, '/welcome');
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Signup failed: $e')),
@@ -352,9 +351,8 @@ class CustomPhotoManager {
         return;
       }
 
-      print("Plotting ${photoLocations.length} locations on the map.");
-      await mapManager.plotLocationsOnMap(photoLocations);
-      print("Markers plotted on map");
+      print("Processing ${photoLocations.length} locations.");
+      mapManager.plotLocationsOnMap(photoLocations);
 
       // 5) Build "trips" from [photoLocations], grouped by 7-day gaps
       photoLocations.sort((a, b) =>
@@ -442,7 +440,6 @@ class CustomPhotoManager {
       }, SetOptions(merge: true));
 
       print("Trips saved to 'users/{uid}/trips'.");
-
     } catch (e) {
       print('Error fetching photo metadata: $e');
       ScaffoldMessenger.of(context).showSnackBar(

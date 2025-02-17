@@ -29,7 +29,7 @@ class MapManager {
   List<City> allCities = [];
   /// TOOD: MAKE GLOBE SPIN, DETECT USER INTERACTION
   ///      _startRotatingGlobe();
-  ///      _mapboxMap.setOnMapMoveListener((point) => _handleUserInteraction());
+  // /      _mapboxMap.setOnMapMoveListener((point) => _handleUserInteraction());
   ///      _mapboxMap.setOnMapTapListener((point) => _handleUserInteraction());
   ///
   Future<void> initializeMapManager(MapboxMap map) async {
@@ -44,7 +44,6 @@ class MapManager {
       _isInitialized = true;
       print("MapManager initialized successfully.");
 
-      // Disable compass etc.
       _mapboxMap.compass.updateSettings(CompassSettings(enabled: false));
       _mapboxMap.logo.updateSettings(LogoSettings(enabled: false));
       _mapboxMap.scaleBar.updateSettings(ScaleBarSettings(enabled: false));
@@ -149,9 +148,8 @@ Future<void> plotLocationsOnMap(List<Location> locations) async {
     try {
       print("Starting to process ${locations.length} locations...");
 
-      // Commented out: Clearing existing markers
-      // await _pointAnnotationManager.deleteAll();
-      // print("Deleted existing markers.");
+      await _pointAnnotationManager.deleteAll();
+      print("Deleted existing markers.");
 
       List<Location> validLocations = locations
           .where((loc) => loc.latitude != 0.0 && loc.longitude != 0.0)
@@ -162,20 +160,19 @@ Future<void> plotLocationsOnMap(List<Location> locations) async {
         return;
       }
 
-      // Commented out: Preloading and plotting pins
-      // final ByteData bytes = await rootBundle.load('lib/assets/pin.png');
-      // final Uint8List imageData = bytes.buffer.asUint8List();
+      // Preloading and plotting pins
+      final ByteData bytes = await rootBundle.load('lib/assets/pin.png');
+      final Uint8List imageData = bytes.buffer.asUint8List();
 
       for (var loc in validLocations) {
         try {
-          // Commented out: Creating map markers
-          // await _pointAnnotationManager.create(
-          //   PointAnnotationOptions(
-          //     geometry: Point(coordinates: Position(loc.longitude, loc.latitude)),
-          //     image: imageData,
-          //     iconSize: 0.05,
-          //   ),
-          // );
+          await _pointAnnotationManager.create(
+            PointAnnotationOptions(
+              geometry: Point(coordinates: Position(loc.longitude, loc.latitude)),
+              image: imageData,
+              iconSize: 0.05,
+            ),
+          );
           print("Processed location (${loc.latitude}, ${loc.longitude})");
         } catch (e) {
           print('Error processing location (${loc.latitude}, ${loc.longitude}): $e');
@@ -188,10 +185,6 @@ Future<void> plotLocationsOnMap(List<Location> locations) async {
       print("Error processing locations: $e");
     }
   }
-
-
-
-
 
   Future<void> flyToLocation(double latitude, double longitude) async {
     if (!_isInitialized) {
@@ -239,7 +232,6 @@ Future<void> plotLocationsOnMap(List<Location> locations) async {
 
 /// Load city data from multiple JSON files (e.g., 7 continents + Central America)
 Future<void> loadAllCityDatasets() async {
-  // Update with all your JSON paths
   const datasetFiles = [
     'lib/database/africa.json',
     'lib/database/asia.json',
