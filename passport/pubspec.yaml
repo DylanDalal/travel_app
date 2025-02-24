@@ -35,7 +35,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - lib/assets/pin.png
+    - lib/assets/pin2.png
     - lib/database/africa.json
     - lib/database/asia.json
     - lib/database/europe.json
