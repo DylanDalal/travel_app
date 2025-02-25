@@ -52,5 +52,9 @@
 	<true/>
 	<key>MBXAccessToken</key>
 	<string>sk.eyJ1IjoiY29ubm9yY2FtcDEyIiwiYSI6ImNtNW42bjJ1cDA4MGUybm9tM3cxNWdwMnUifQ.74B36OWlxmAAfrqSkA_zRA</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to your photo library to manage past trips.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app requires access to your photo library to create past trips based on location data.</string>
 </dict>
 </plist>

@@ -11,7 +11,7 @@ class MyTripList extends StatelessWidget {
   final Function(Map<String, dynamic>) onTapTrip;
   final Function(Map<String, dynamic>) onEditTrip;
 
-  /// Callback from parent to toggle a trip’s selection
+  /// Callback from parent to toggle a trip's selection
   final Function(String tripId, bool isSelected) onToggleSelection;
 
   const MyTripList({
@@ -53,11 +53,17 @@ class MyTripList extends StatelessWidget {
 
         // Extract the ISO strings
         final startIso = trip['timeframe']?['start'] ?? '';
-        final endIso   = trip['timeframe']?['end']   ?? '';
+        final endIso = trip['timeframe']?['end'] ?? '';
 
-        // Convert them into something like "Jan. 15th, 2025 - Jan. 20th, 2025"
+        // Format the dates
+        final String startDate = _formatFriendlyDate(startIso);
+        final String endDate = _formatFriendlyDate(endIso);
+
+        // Set display date based on whether dates are the same
         final displayDate = (startIso.isNotEmpty && endIso.isNotEmpty)
-            ? '${_formatFriendlyDate(startIso)} - ${_formatFriendlyDate(endIso)}'
+            ? (startDate == endDate)
+                ? startDate  // If same date, just show one
+                : '$startDate - $endDate'  // If different, show range
             : 'Unknown Date';
 
         return Dismissible(

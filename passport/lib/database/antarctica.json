@@ -1,0 +1,97 @@
+[
+  {
+    "name": "Henryk Arctowski Polish Antarctic Station",
+    "latitude": -62.1590141,
+    "longitude": -58.4719356
+  },
+  {
+    "name": "Villa Las Estrellas",
+    "latitude": -62.2004259,
+    "longitude": -58.965369
+  },
+  {
+    "name": "Vernadsky Research Base",
+    "latitude": -65.2455082,
+    "longitude": -64.2576877
+  },
+  {
+    "name": "McMurdo Station",
+    "latitude": -77.8483347,
+    "longitude": 166.6683349
+  },
+  {
+    "name": "Marambio Base",
+    "latitude": -64.2406202,
+    "longitude": -56.6276898
+  },
+  {
+    "name": "Neumayer Station III",
+    "latitude": -70.674444,
+    "longitude": -8.274167
+  },
+  {
+    "name": "Orcadas Base",
+    "latitude": -60.7380711,
+    "longitude": -44.7376889
+  },
+  {
+    "name": "Carlini Base",
+    "latitude": -62.2379343,
+    "longitude": -58.6670078
+  },
+  {
+    "name": "Captain Arturo Prat Base",
+    "latitude": -62.4788934,
+    "longitude": -59.6643357
+  },
+  {
+    "name": "Bellingshausen Station",
+    "latitude": -62.1982029,
+    "longitude": -58.9599213
+  },
+  {
+    "name": "Zhongshan Station",
+    "latitude": -69.3736121,
+    "longitude": 76.3717498
+  },
+  {
+    "name": "King Sejong Station",
+    "latitude": -62.2230468,
+    "longitude": -58.7873094
+  },
+  {
+    "name": "San Martin Base",
+    "latitude": -68.1300561,
+    "longitude": -67.1013189
+  },
+  {
+    "name": "Artigas Base",
+    "latitude": -62.1843978,
+    "longitude": -58.9038541
+  },
+  {
+    "name": "Jang Bogo Station",
+    "latitude": -74.6240921,
+    "longitude": 164.2288249
+  },
+  {
+    "name": "AmundsenScott South Pole Station",
+    "latitude": -89.998,
+    "longitude": -139.2728
+  },
+  {
+    "name": "German Antarctic Receiving Station O'Higgins",
+    "latitude": -63.320893,
+    "longitude": -57.9011686
+  },
+  {
+    "name": "Great Wall Station",
+    "latitude": -62.217746,
+    "longitude": -58.9611826
+  },
+  {
+    "name": "Qinling Station",
+    "latitude": -74.9343406,
+    "longitude": 163.7152681
+  }
+]
