@@ -1,17 +1,16 @@
 // lib/automatically_load_trips_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart'; // Import for TypeAheadField
-import 'package:http/http.dart' as http; // Import the http package
-import 'dart:convert'; // Import for json decoding
+import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert'; 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Import your custom classes
-import '../user_data/data_operations.dart'; // Import DataSaver and CustomPhotoManager
-import '../trips/map_manager.dart'; // Import MapManager
-import '../home_screen.dart'; // Import HomeScreen
-import '../classes.dart'; // Import Location and City
+import '../user_data/data_operations.dart'; 
+import '../trips/map_manager.dart'; 
+import '../home_screen.dart'; 
+import '../classes.dart'; 
 
 class AutomaticallyLoadTripsScreen extends StatefulWidget {
   const AutomaticallyLoadTripsScreen({Key? key}) : super(key: key);
@@ -62,7 +61,9 @@ class _AutomaticallyLoadTripsScreenState extends State<AutomaticallyLoadTripsScr
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         List features = data['features'];
-        return features.map<String>((feature) => feature['place_name'] as String).toList();
+        return features
+            .map<String>((feature) => feature['place_name'] as String)
+            .toList();
       } else {
         print('Mapbox API Error: ${response.statusCode}');
         return [];
@@ -101,26 +102,23 @@ class _AutomaticallyLoadTripsScreenState extends State<AutomaticallyLoadTripsScr
       return;
     }
 
-    // Define the timeframe as needed
+    // We'll now fetch device photos & build trips in Firebase
     final DateTimeRange timeframe = DateTimeRange(
-      start: DateTime.now().subtract(Duration(days: 365)), // Example: past year
+      start: DateTime.now().subtract(Duration(days: 365)), // Example
       end: DateTime.now(),
     );
 
-    // Call fetchAndPlotPhotoMetadata from CustomPhotoManager within data_operations.dart
-    await CustomPhotoManager.fetchAndPlotPhotoMetadata(
-      context,
-      _mapManager,
-      timeframe,
+    // Instead of fetchAndPlot, we only fetch + store
+    await CustomPhotoManager.fetchPhotoMetadata(
+      context: context,
+      timeframe: timeframe,
     );
 
-    print("BOOBS BOOBS BOOBS BIG FAT KNOCKER BOOBS");
-    // Navigate to HomeScreen
+    // Then navigate to HomeScreen, where the map is displayed + pinned
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => HomeScreen()),
     );
-    print("BINGO BINGO BINGO");
   }
 
   @override
@@ -128,14 +126,14 @@ class _AutomaticallyLoadTripsScreenState extends State<AutomaticallyLoadTripsScr
     return Scaffold(
       appBar: AppBar(
         title: Text('Automatically Load Trips'),
-        automaticallyImplyLeading: false, // Prevent back navigation
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             Text(
-              "Passport will automatically load your past trips based on location data attached to your photos. None of these photos are ever visible to us or stored in our database—we only access the location metadata. You may also manually select and limit the pictures that Passport creates trips from by allowing selective photo access.",
+              "Passport will automatically load your past trips ...",
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 24),
@@ -177,10 +175,12 @@ class _AutomaticallyLoadTripsScreenState extends State<AutomaticallyLoadTripsScr
             Wrap(
               spacing: 8.0,
               children: hometowns
-                  .map((hometown) => Chip(
-                        label: Text(hometown),
-                        onDeleted: () => _removeHometown(hometown),
-                      ))
+                  .map(
+                    (hometown) => Chip(
+                      label: Text(hometown),
+                      onDeleted: () => _removeHometown(hometown),
+                    ),
+                  )
                   .toList(),
             ),
             Spacer(),
@@ -188,7 +188,7 @@ class _AutomaticallyLoadTripsScreenState extends State<AutomaticallyLoadTripsScr
               onPressed: _grantPhotoAccess,
               child: Text('Grant Photo Access'),
               style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 50), // Make button full width
+                minimumSize: Size(double.infinity, 50),
               ),
             ),
           ],

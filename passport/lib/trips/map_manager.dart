@@ -27,11 +27,7 @@ class MapManager {
   MapManager({required this.onPlotComplete});
 
   List<City> allCities = [];
-  /// TOOD: MAKE GLOBE SPIN, DETECT USER INTERACTION
-  ///      _startRotatingGlobe();
-  // /      _mapboxMap.setOnMapMoveListener((point) => _handleUserInteraction());
-  ///      _mapboxMap.setOnMapTapListener((point) => _handleUserInteraction());
-  ///
+
   Future<void> initializeMapManager(MapboxMap map) async {
     if (_isInitialized) {
       print("MapManager is already initialized. Skipping re-initialization.");
@@ -55,7 +51,7 @@ class MapManager {
     }
   }
 
-void _startRotatingGlobe() async {
+  void startRotatingGlobe() async {
     if (_viewingTrip) {
       print("Currently viewing a trip. Rotation disabled.");
       return;
@@ -70,7 +66,7 @@ void _startRotatingGlobe() async {
         (_lastCameraState?.center?.coordinates.lat ?? 0.0).toDouble();
     double initialZoom = _lastCameraState?.zoom ?? 2.0;
 
-    double rotationSpeed = 0.15; // Adjust rotation speed
+    double rotationSpeed = 0.08; // Adjust rotation speed
 
     _rotationTimer = Timer.periodic(Duration(milliseconds: 100), (timer) async {
       if (_userInteracted || _viewingTrip) {
@@ -94,7 +90,7 @@ void _startRotatingGlobe() async {
       _mapboxMap.setCamera(
         CameraOptions(
           center: Point(coordinates: Position(newLongitude, currentLatitude)),
-          zoom: currentZoom, // Keep zoom level fixed to view the whole globe
+          zoom: currentZoom,
         ),
       );
     });
@@ -114,7 +110,7 @@ void _startRotatingGlobe() async {
       if (!_viewingTrip) {
         print("Resuming globe rotation after inactivity.");
         _userInteracted = false;
-        _startRotatingGlobe();
+        startRotatingGlobe();
       }
     });
   }
@@ -127,64 +123,68 @@ void setViewingTrip(bool isViewing) {
       _rotationTimer?.cancel();
     } else {
       print("Exited trip view, resuming auto-rotation.");
-      _startRotatingGlobe();
+      startRotatingGlobe();
     }
   }
 
   void resumeAutoRotation() {
     if (!_userInteracted && !_viewingTrip) {
       print("Resuming auto-rotation.");
-      _startRotatingGlobe();
+      startRotatingGlobe();
     }
   }
 
   /// Plot a list of photo locations
 Future<void> plotLocationsOnMap(List<Location> locations) async {
-    if (!isInitialized) {
-      print("MapManager not initialized yet.");
+  if (!isInitialized) {
+    print("MapManager not initialized yet.");
+    return;
+  }
+
+  try {
+    print("Processing ${locations.length} locations...");
+
+    List<Location> validLocations = locations
+        .where((loc) => loc.latitude != 0.0 && loc.longitude != 0.0)
+        .toList();
+
+    if (validLocations.isEmpty) {
+      print("No valid locations to process.");
       return;
     }
 
+    // Preload pin image once with error handling
     try {
-      print("Starting to process ${locations.length} locations...");
-
-      await _pointAnnotationManager.deleteAll();
-      print("Deleted existing markers.");
-
-      List<Location> validLocations = locations
-          .where((loc) => loc.latitude != 0.0 && loc.longitude != 0.0)
-          .toList();
-
-      if (validLocations.isEmpty) {
-        print("No valid locations to process.");
-        return;
-      }
-
-      // Preloading and plotting pins
-      final ByteData bytes = await rootBundle.load('lib/assets/pin.png');
+      print("Loading pin image...");
+      final ByteData bytes = await rootBundle.load('lib/assets/pin2.png');
       final Uint8List imageData = bytes.buffer.asUint8List();
+      print("Pin image loaded successfully: ${imageData.length} bytes");
 
+      print("Creating annotation options...");
       for (var loc in validLocations) {
         try {
-          await _pointAnnotationManager.create(
-            PointAnnotationOptions(
-              geometry: Point(coordinates: Position(loc.longitude, loc.latitude)),
-              image: imageData,
-              iconSize: 0.05,
-            ),
+          final annotation = PointAnnotationOptions(
+            geometry: Point(coordinates: Position(loc.longitude, loc.latitude)),
+            image: imageData,
+            iconSize: 0.4,
           );
-          print("Processed location (${loc.latitude}, ${loc.longitude})");
-        } catch (e) {
-          print('Error processing location (${loc.latitude}, ${loc.longitude}): $e');
+
+          await _pointAnnotationManager.create(annotation);
+        } catch (pinError) {
+          print("Error creating single pin: $pinError");
+          continue;
         }
       }
-
-      print("Locations processed successfully without rendering pins.");
-      onPlotComplete();
-    } catch (e) {
-      print("Error processing locations: $e");
+      print("Created ${validLocations.length} pins");
+    } catch (imageError) {
+      print("Error loading pin image: $imageError");
     }
+
+    onPlotComplete();
+  } catch (e) {
+    print("Error processing locations: $e");
   }
+}
 
   Future<void> flyToLocation(double latitude, double longitude) async {
     if (!_isInitialized) {
@@ -226,7 +226,7 @@ Future<void> plotLocationsOnMap(List<Location> locations) async {
       MapAnimationOptions(duration: 2000, startDelay: 0),
     );
 
-    _startRotatingGlobe();
+    startRotatingGlobe();
   }
 
 
@@ -271,6 +271,15 @@ Future<void> loadAllCityDatasets() async {
 }
 
 double _toRadians(double deg) => deg * (math.pi / 180.0);
+
+Future<void> clearAllPins() async {
+  if (!isInitialized) {
+    print("MapManager not initialized yet.");
+    return;
+  }
+  await _pointAnnotationManager.deleteAll();
+  print("Cleared all existing pins.");
+}
 
 }
 

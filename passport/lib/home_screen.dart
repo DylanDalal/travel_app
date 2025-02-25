@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:passport/trips/map_manager.dart';
-import 'package:passport/user_data/data_operations.dart';
+import 'package:passport/user_data/data_operations.dart'; 
 import 'package:passport/utils/photo_trip_service.dart';
 import 'friends_section.dart';
 import 'classes.dart';
@@ -34,12 +34,10 @@ class HomeScreenState extends State<HomeScreen> {
 
     _mapManager = MapManager(
       onPlotComplete: () {
-        print('Map plotting completed successfully (skipped).');
+        print('Map plotting completed successfully.');
+        _mapManager.startRotatingGlobe();
       },
     );
-
-    _photoTripService = PhotoTripService(mapManager: _mapManager);
-    _initializeUserData();
   }
 
   Future<void> _initializeUserData() async {
@@ -48,10 +46,6 @@ class HomeScreenState extends State<HomeScreen> {
 
     print("Checking user data for: ${user.uid}");
     bool isFirstLogin = await _checkIfFirstLogin(user.uid);
-    if (!isFirstLogin && !_dataFetched) {
-      // We'll rely on MyTripsSection's map initialization
-      // Then fetch data once the map is ready.
-    }
   }
 
   Future<bool> _checkIfFirstLogin(String userId) async {
@@ -69,7 +63,6 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   // Called by MyTripsSection once the map is definitely initialized
-  // (so we can't skip plotting)
   void fetchDataWhenMapIsReady() {
     if (_dataFetched) {
       print("Data already fetched, skipping re-fetch.");
@@ -77,23 +70,10 @@ class HomeScreenState extends State<HomeScreen> {
     }
     _dataFetched = true;
 
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final DateTimeRange timeframe = DateTimeRange(
-      start: DateTime.now().subtract(const Duration(days: 365)),
-      end: DateTime.now(),
+    CustomPhotoManager.plotPhotoMetadata(
+      context: context,
+      mapManager: _mapManager,
     );
-
-    print("Map is initialized; skipping actual plotting of photo data.");
-
-    // SKIPPED: 
-    // CustomPhotoManager.fetchAndPlotPhotoMetadata(context, _mapManager, timeframe)
-    //     .then((_) => print("Photo data fetched and plotted successfully (skipped)."))
-    //     .catchError((e) {
-    //   print('Error fetching and plotting photo data: $e');
-    //   _dataFetched = false;
-    // });
   }
 
   Future<void> _logout(BuildContext context) async {

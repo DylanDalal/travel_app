@@ -16,23 +16,18 @@ import 'trips/edit_trip_screen.dart';
 import 'trips/trip_detail_view.dart';
 import 'trips/my_trip_list.dart';
 import 'classes.dart'; // For the Location class, etc.
-
-// Import data_operations.dart
-import 'package:passport/user_data/data_operations.dart';
-
-// Import dart:async for Timer
+import 'package:passport/user_data/data_operations.dart'; // For the new fetch/plot methods
 import 'dart:async';
+import 'package:intl/intl.dart';
 
 class MyTripsSection extends StatefulWidget {
   final MapManager mapManager;
-
-  /// Add this so HomeScreen can specify onMapInitialized: fetchDataWhenMapIsReady
-  final VoidCallback? onMapInitialized; 
+  final VoidCallback? onMapInitialized;
 
   MyTripsSection({
     Key? key,
     required this.mapManager,
-    this.onMapInitialized, // make it optional
+    this.onMapInitialized,
   }) : super(key: key);
 
   @override
@@ -56,7 +51,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
 
   late MapManager mapManager;
   bool isMapInitialized = false;
-
 
   @override
   void initState() {
@@ -375,7 +369,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     );
   }
 
-
   Widget _buildTopRow() {
     if (isSelecting) {
       return Row(
@@ -492,7 +485,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         timeframe: timeframe,
         photoLocations: [],
         onPickDateRange: _pickDateRange,
-        onFetchMetadata: () {
+        onFetchMetadata: () async {
           if (!isMapInitialized) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Map is not ready yet.')),
@@ -505,11 +498,13 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             );
             return;
           }
-          CustomPhotoManager.fetchAndPlotPhotoMetadata(
-            context,
-            mapManager,
-            timeframe!,
+          // Call the new fetchPhotoMetadata 
+          await CustomPhotoManager.fetchPhotoMetadata(
+            context: context,
+            timeframe: timeframe!,
           );
+          // Then refresh local trips
+          await _loadTrips();
         },
         onUpdateTrip: _updateTrip,
         onSplitDate: _performTripSplit,
@@ -520,7 +515,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         timeframe: timeframe,
         photoLocations: [],
         onPickDateRange: _pickDateRange,
-        onFetchMetadata: () {
+        onFetchMetadata: () async {
           if (!isMapInitialized) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Map is not ready yet.')),
@@ -533,11 +528,13 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             );
             return;
           }
-          CustomPhotoManager.fetchAndPlotPhotoMetadata(
-            context,
-            mapManager,
-            timeframe!,
+          // fetch from device, store in firebase
+          await CustomPhotoManager.fetchPhotoMetadata(
+            context: context,
+            timeframe: timeframe!,
           );
+          // reload the local trips to see new data
+          await _loadTrips();
         },
         onSaveTrip: _createTrip,
       );
@@ -619,5 +616,29 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         timeframe = pickedRange;
       });
     }
+  }
+
+  Widget _buildTripDateRange(Map<String, dynamic> trip) {
+    final timeframe = trip['timeframe'];
+    if (timeframe == null) return const Text('');
+    
+    final startDate = DateTime.parse(timeframe['start']);
+    final endDate = DateTime.parse(timeframe['end']);
+    
+    // If start and end dates are the same, show single date
+    if (startDate.year == endDate.year && 
+        startDate.month == endDate.month && 
+        startDate.day == endDate.day) {
+      return Text(
+        DateFormat('MMM d, yyyy').format(startDate),
+        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+      );
+    }
+    
+    // Otherwise show date range
+    return Text(
+      '${DateFormat('MMM d').format(startDate)} - ${DateFormat('MMM d, yyyy').format(endDate)}',
+      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+    );
   }
 }
