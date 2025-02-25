@@ -75,7 +75,7 @@ class _TripDetailViewState extends State<TripDetailView> {
                 "Trip Dates:",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              Text(dateDisplay),
+              _buildDateHeader(),
               const SizedBox(height: 24),
               // Display stops as a list, showing only the city name and the friendly date.
               ListView.builder(
@@ -205,6 +205,29 @@ Future<String> _fetchPlaceName(double latitude, double longitude) async {
           const SizedBox(height: 24),
           const Text("No stops found for this trip."),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDateHeader() {
+    final timeframe = widget.trip['timeframe'];
+    final startDate = DateTime.parse(timeframe['start']);
+    final endDate = DateTime.parse(timeframe['end']);
+
+    final String dateText;
+    if (startDate.year == endDate.year && 
+        startDate.month == endDate.month && 
+        startDate.day == endDate.day) {
+      dateText = DateFormat('MMMM d, yyyy').format(startDate);
+    } else {
+      dateText = '${DateFormat('MMM d').format(startDate)} - ${DateFormat('MMM d, yyyy').format(endDate)}';
+    }
+
+    return Text(
+      dateText,
+      style: TextStyle(
+        fontSize: 16,
+        color: Colors.grey[600],
       ),
     );
   }

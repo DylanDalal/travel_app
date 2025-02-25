@@ -7,6 +7,7 @@ import 'dart:math' as math; // For haversineDistance
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:photo_manager/photo_manager.dart' as photo_manager;
+import 'package:intl/intl.dart';
 
 import '../trips/map_manager.dart';
 import '../classes.dart';
@@ -109,17 +110,12 @@ class DataSaver {
   }
 }
 
-/*
-    ===  Class CustomPhotoManager ===
-    Responsible for locally retrieving photo metadata / dealing with permissions,
-    city lookup, etc.
-*/
+/// Responsible for retrieving photo metadata from the device, city lookup, etc.
 class CustomPhotoManager {
   /// Master list of all known cities. Populated by loadAllCityDatasets().
   static List<City> allCities = [];
 
-  /// Load city data from multiple JSON files (e.g., 7 continents + Central America).
-  /// Once loaded, findClosestCity(...) can properly return city names.
+  /// Load city data from multiple JSON files
   static Future<void> loadAllCityDatasets() async {
     const datasetFiles = [
       'lib/database/africa.json',
@@ -136,17 +132,14 @@ class CustomPhotoManager {
 
     for (final filePath in datasetFiles) {
       try {
-        // Load the JSON from assets
         final dataString = await rootBundle.loadString(filePath);
         final List<dynamic> jsonList = jsonDecode(dataString);
 
-        // Parse each city entry
         for (var item in jsonList) {
           final name = item['name'] as String?;
           final lat = item['latitude']?.toDouble();
           final lon = item['longitude']?.toDouble();
 
-          // Skip invalid entries
           if (name == null || lat == null || lon == null) continue;
 
           allCities.add(City(name: name, latitude: lat, longitude: lon));
@@ -160,13 +153,10 @@ class CustomPhotoManager {
   }
 
   /// Return the city in [allCities] closest to (lat, lon).
-  /// If [allCities] is empty or none found, returns null.
   static City? findClosestCity(double lat, double lon) {
     if (allCities.isEmpty) {
-      // If user hasn't called loadAllCityDatasets(), city remains unknown
       return null;
     }
-
     City? closestCity;
     double minDistance = double.infinity;
 
@@ -180,9 +170,8 @@ class CustomPhotoManager {
     return closestCity;
   }
 
-  /// Calculate approximate distance in km between two lat/lon points.
   static double _haversineDistance(double lat1, double lon1, double lat2, double lon2) {
-    const R = 6371; // Earth's radius in km
+    const R = 6371; // Earth in km
     final dLat = _toRadians(lat2 - lat1);
     final dLon = _toRadians(lon2 - lon1);
 
@@ -198,69 +187,23 @@ class CustomPhotoManager {
 
   static double _toRadians(double deg) => deg * (math.pi / 180.0);
 
-  /// Fetch all photo metadata from the device
-  static Future<List<Location>> fetchAllPhotoMetadata() async {
-    List<Location> locations = [];
-    try {
-      // Request permission
-      final photo_manager.PermissionState permission =
-          await photo_manager.PhotoManager.requestPermissionExtend();
-
-      if (!permission.isAuth) {
-        print('Photo access denied.');
-        return locations;
-      }
-
-      // Fetch all albums
-      final List<photo_manager.AssetPathEntity> albums =
-          await photo_manager.PhotoManager.getAssetPathList(
-        type: photo_manager.RequestType.image,
-        hasAll: true,
-      );
-
-      for (final photo_manager.AssetPathEntity album in albums) {
-        final List<photo_manager.AssetEntity> photos =
-            await album.getAssetListPaged(page: 0, size: 10000);
-
-        for (final photo_manager.AssetEntity asset in photos) {
-          if (asset.latitude != null && asset.longitude != null) {
-            final double latitude = asset.latitude!;
-            final double longitude = asset.longitude!;
-            final DateTime date = asset.createDateTime;
-
-            final Location location = Location(
-              latitude: latitude,
-              longitude: longitude,
-              timestamp: date.toIso8601String(),
-            );
-            locations.add(location);
-          }
-        }
-      }
-    } catch (e) {
-      print('Error fetching photo metadata: $e');
-    }
-    return locations;
-  }
-
-  /// Fetch and plot photo metadata on the map (device-level fetching).
-  /// Called ONLY if user opts to "Automatically Load Trips."
-  static Future<void> fetchAndPlotPhotoMetadata(
-    BuildContext context,
-    MapManager mapManager,
-    DateTimeRange timeframe,
-  ) async {
+  /// Fetch location data from the device and build + save trips in Firebase.
+  /// Does NOT require the map to be initialized (no pins plotted here).
+  static Future<void> fetchPhotoMetadata({
+    required BuildContext context,
+    required DateTimeRange timeframe,
+  }) async {
+    // 1) Check timeframe
     if (timeframe == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a timeframe first.')),
+        SnackBar(content: Text('Please select a timeframe first.')),
       );
       return;
     }
 
+    // 2) Request photo permission
     final photo_manager.PermissionState state =
         await photo_manager.PhotoManager.requestPermissionExtend();
-    print('Photo permission state: $state');
-
     if (!state.isAuth) {
       print('Photo access denied.');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -270,63 +213,53 @@ class CustomPhotoManager {
     }
 
     try {
-      // 1) Load all cities
+      // 3) Load city datasets (for findClosestCity)
       await loadAllCityDatasets();
 
-      // 2) Print user hometowns
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        print("No authenticated user found. Cannot fetch hometowns.");
+        print("No authenticated user found. Cannot proceed.");
         return;
       }
 
-      final userDoc =
-          await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      final hometowns = userDoc.data()?['hometowns'] as List<dynamic>? ?? [];
-      print("User's hometowns: $hometowns");
-
-      // 3) Get all albums & photos
-      final List<photo_manager.AssetPathEntity> albums =
-          await photo_manager.PhotoManager.getAssetPathList(
+      // 4) Fetch photos from the device
+      final albums = await photo_manager.PhotoManager.getAssetPathList(
         type: photo_manager.RequestType.image,
       );
 
       if (albums.isEmpty) {
         print('No photo albums found.');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No photo albums found.')),
+          SnackBar(content: Text('No photo albums found.')),
         );
         return;
       }
 
-      // For simplicity, pick the first album
-      final photo_manager.AssetPathEntity recentAlbum = albums[0];
-      final List<photo_manager.AssetEntity> userPhotos =
-          await recentAlbum.getAssetListPaged(page: 0, size: 100);
+      final photo_manager.AssetPathEntity firstAlbum = albums[0];
+      final userPhotos = await firstAlbum.getAssetListPaged(page: 0, size: 100);
 
       if (userPhotos.isEmpty) {
         print('No photos found in the album.');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No photos found in the album.')),
+          SnackBar(content: Text('No photos found in the album.')),
         );
         return;
       }
 
-      // 4) Filter userPhotos by timeframe, gather into [photoLocations]
+      // 5) Build photoLocations by timeframe
       List<Location> photoLocations = [];
       final start = timeframe.start;
       final end = timeframe.end;
 
-      for (final photo_manager.AssetEntity photoEntity in userPhotos) {
-        final lat = photoEntity.latitude ?? 0.0;
-        final lon = photoEntity.longitude ?? 0.0;
-        final createTime = photoEntity.createDateTime;
+      for (final asset in userPhotos) {
+        final lat = asset.latitude ?? 0.0;
+        final lon = asset.longitude ?? 0.0;
+        final createTime = asset.createDateTime;
 
         if (lat != 0.0 &&
             lon != 0.0 &&
             createTime.isAfter(start) &&
             createTime.isBefore(end)) {
-          // Find city
           final city = findClosestCity(lat, lon);
           final cityName = city?.name ?? 'Unknown';
 
@@ -339,22 +272,17 @@ class CustomPhotoManager {
               timestamp: createTime.toIso8601String(),
             ),
           );
-        } else {
-          print("Skipping invalid/out-of-range photo: $lat, $lon");
         }
       }
 
       if (photoLocations.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No photos found in the selected timeframe.')),
+          SnackBar(content: Text('No photos found within that timeframe.')),
         );
         return;
       }
 
-      print("Processing ${photoLocations.length} locations.");
-      mapManager.plotLocationsOnMap(photoLocations);
-
-      // 5) Build "trips" from [photoLocations], grouped by 7-day gaps
+      // 6) Build trips from these photoLocations
       photoLocations.sort((a, b) =>
           DateTime.parse(a.timestamp).compareTo(DateTime.parse(b.timestamp)));
 
@@ -368,13 +296,12 @@ class CustomPhotoManager {
         final thisPhotoTime = DateTime.parse(loc.timestamp);
 
         if (currentTrip == null) {
-          // Create first trip
-          final city = findClosestCity(loc.latitude, loc.longitude);
-          final cityName = city?.name ?? 'Unknown';
+          final firstCity = findClosestCity(loc.latitude, loc.longitude);
+          final firstCityName = firstCity?.name ?? 'Unknown';
 
           currentTrip = {
-            'id': _generateTripId(), // e.g. "#a1b2c"
-            'title': cityName,
+            'id': _generateTripId(),
+            'title': firstCityName, // Initial title with just first city
             'timeframe': {
               'start': loc.timestamp,
               'end': loc.timestamp,
@@ -389,21 +316,36 @@ class CustomPhotoManager {
           };
           lastPhotoTime = thisPhotoTime;
         } else {
-          // Check date difference
           final difference = thisPhotoTime.difference(lastPhotoTime!).inDays;
           if (difference.abs() <= dayGap) {
-            // Belongs to current trip
+            // Same trip
             currentTrip['locations'].add({
               'latitude': loc.latitude,
               'longitude': loc.longitude,
               'timestamp': loc.timestamp,
             });
-            // Update end date
             currentTrip['timeframe']['end'] = loc.timestamp;
+
+            // Update title based on number of locations
+            final locations = currentTrip['locations'] as List;
+            if (locations.length == 2) {
+              // For exactly 2 locations: "City1 and City2"
+              final firstLoc = locations.first;
+              final lastLoc = locations.last;
+              final firstCity = findClosestCity(firstLoc['latitude'], firstLoc['longitude']);
+              final lastCity = findClosestCity(lastLoc['latitude'], lastLoc['longitude']);
+              currentTrip['title'] = '${firstCity?.name ?? "Unknown"} and ${lastCity?.name ?? "Unknown"}';
+            } else if (locations.length > 2) {
+              // For 3+ locations: "City1 to CityN"
+              final firstLoc = locations.first;
+              final lastLoc = locations.last;
+              final firstCity = findClosestCity(firstLoc['latitude'], firstLoc['longitude']);
+              final lastCity = findClosestCity(lastLoc['latitude'], lastLoc['longitude']);
+              currentTrip['title'] = '${firstCity?.name ?? "Unknown"} to ${lastCity?.name ?? "Unknown"}';
+            }
           } else {
-            // Finish current trip, add to trips
+            // Start new trip
             trips.add(currentTrip);
-            // Start a new trip
             final city = findClosestCity(loc.latitude, loc.longitude);
             final cityName = city?.name ?? 'Unknown';
 
@@ -426,15 +368,13 @@ class CustomPhotoManager {
           lastPhotoTime = thisPhotoTime;
         }
       }
-
-      // Add the last trip
       if (currentTrip != null) {
         trips.add(currentTrip);
       }
 
-      print("Created ${trips.length} trips.");
+      print("Created ${trips.length} trips from device photos.");
 
-      // 6) Save trips to Firebase: 'users/{uid}/trips'
+      // 7) Save trips to Firebase
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'trips': trips,
       }, SetOptions(merge: true));
@@ -443,12 +383,76 @@ class CustomPhotoManager {
     } catch (e) {
       print('Error fetching photo metadata: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error fetching photo metadata.')),
+        SnackBar(content: Text('Error fetching photo metadata.')),
       );
     }
   }
 
-  /// Private helper to generate a random trip ID like "#a1b2c"
+  /// Plot existing trips from Firebase onto the map.
+  /// Requires the map to be initialized, but does NOT read from the device.
+  static Future<void> plotPhotoMetadata({
+    required BuildContext context,
+    required MapManager mapManager,
+  }) async {
+    if (!mapManager.isInitialized) {
+      print('Map is not initialized; cannot plot pins.');
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print("No authenticated user found.");
+      return;
+    }
+
+    try {
+      final userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (!userDoc.exists) {
+        print("User doc doesn't exist, no trips to plot.");
+        return;
+      }
+
+      final List<dynamic> tripsData = userDoc.data()?['trips'] ?? [];
+      if (tripsData.isEmpty) {
+        print('No trips found to plot.');
+        return;
+      }
+
+      List<Location> allLocations = [];
+      for (final trip in tripsData) {
+        final locs = trip['locations'] ?? [];
+        for (final loc in locs) {
+          allLocations.add(Location(
+            latitude: loc['latitude'],
+            longitude: loc['longitude'],
+            timestamp: loc['timestamp'],
+          ));
+        }
+      }
+
+      if (allLocations.isEmpty) {
+        print('No photo locations in the stored trips.');
+        return;
+      }
+
+      // Clear existing pins and plot all locations at once
+      await mapManager.clearAllPins();
+      print("Cleared existing pins before plotting.");
+      
+      print("Plotting ${allLocations.length} locations...");
+      await mapManager.plotLocationsOnMap(allLocations);
+    } catch (e) {
+      print('Error plotting trips: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error plotting photo metadata.')),
+        );
+      }
+    }
+  }
+
+  /// Generate random ID like "#a1b2c"
   static String _generateTripId() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     final rnd = math.Random();

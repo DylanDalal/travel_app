@@ -27,7 +27,6 @@ class PhotoTripService {
       final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       if (userDoc.exists && userDoc.data()?['hasPhotoMetadata'] == true) {
         print("Photo metadata already exists. Skipping re-upload.");
-        // Optionally, you can navigate to HomeScreen or refresh data
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomeScreen()),
@@ -40,9 +39,17 @@ class PhotoTripService {
         'hometowns': hometowns,
       }, SetOptions(merge: true));
 
-      // Fetch and process photos
-      List<Location> fetchedPhotos = await CustomPhotoManager.fetchAllPhotoMetadata();
-      await DataSaver.savePhotoMetadataToFirebase(user.uid, fetchedPhotos);
+      // 1) Fetch from device & build trips in Firebase 
+      // (Equivalent to the old fetch half, no map needed)
+      await CustomPhotoManager.fetchPhotoMetadata(
+        context: context,
+        timeframe: DateTimeRange(
+          start: DateTime.now().subtract(Duration(days: 10000)),
+          end: DateTime.now(),
+        ),
+      );
+
+      // Mark that user now has metadata
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
         {'hasPhotoMetadata': true},
         SetOptions(merge: true),
@@ -50,15 +57,13 @@ class PhotoTripService {
 
       print('Saved photo metadata successfully.');
 
-      // Plot the photos immediately after saving
-      await CustomPhotoManager.fetchAndPlotPhotoMetadata(
-        context,
-        mapManager,
-        DateTimeRange(
-          start: DateTime.now().subtract(Duration(days: 10000)),
-          end: DateTime.now(),
-        ),
-      );
+      // 2) Plot the trips on the map (only if needed).
+      // If your map is not yet in place or you prefer to do this in HomeScreen,
+      // you can skip or comment out the next line.
+      // await CustomPhotoManager.plotPhotoMetadata(
+      //   context: context,
+      //   mapManager: mapManager,
+      // );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Your photos have been saved and plotted!')),
@@ -69,7 +74,6 @@ class PhotoTripService {
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
       );
-      print("PENIS PENIS PENIS PENIS");
     } else if (photo.PermissionState.limited == photo.PermissionState.limited) {
       print('Photo access is limited.');
       ScaffoldMessenger.of(context).showSnackBar(
