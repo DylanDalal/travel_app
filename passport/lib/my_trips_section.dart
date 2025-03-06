@@ -16,49 +16,49 @@ import 'trips/edit_trip_screen.dart';
 import 'trips/trip_detail_view.dart';
 import 'trips/my_trip_list.dart';
 import 'classes.dart'; // For the Location class, etc.
+import 'package:passport/user_data/data_operations.dart'; // For the new fetch/plot methods
+import 'dart:async';
+import 'package:intl/intl.dart';
 
 class MyTripsSection extends StatefulWidget {
   final MapManager mapManager;
+  final VoidCallback? onMapInitialized;
 
-  MyTripsSection({required this.mapManager});
+  MyTripsSection({
+    Key? key,
+    required this.mapManager,
+    this.onMapInitialized,
+  }) : super(key: key);
 
   @override
   _MyTripsSectionState createState() => _MyTripsSectionState();
 }
 
 class _MyTripsSectionState extends State<MyTripsSection> {
-  // Screen flags
   bool isCreatingTrip = false;
   bool isEditingTrip = false;
   bool isViewingTrip = false;
 
-  // Draggable sheet
   double currentChildSize = 0.25;
-
-  // Data
   DateTimeRange? timeframe;
   final TextEditingController titleController = TextEditingController();
   List<Map<String, dynamic>> trips = [];
-  List<Location> photoLocations = [];
   String? editingTripId;
   Map<String, dynamic>? selectedTrip;
 
-  // Selection mode
   bool isSelecting = false;
   Set<String> selectedTripIds = {};
 
-  // Map
   late MapManager mapManager;
+  bool isMapInitialized = false;
 
-@override
+  @override
   void initState() {
     super.initState();
-    _loadTrips(); // Load trips from Firestore
+    mapManager = widget.mapManager;
+    _loadTrips();
   }
 
-  // ---------------------
-  // FIRESTORE / LOAD
-  // ---------------------
   Future<void> _loadTrips() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -67,7 +67,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       final userDoc =
           await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       final List<dynamic> tripData = userDoc.data()?['trips'] ?? [];
-
       setState(() {
         trips = tripData.map((t) => t as Map<String, dynamic>).toList();
       });
@@ -76,93 +75,27 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
   }
 
-  // ---------------------
-  // MAP
-  // ---------------------
   void _onMapCreated(MapboxMap map) {
     widget.mapManager.initializeMapManager(map);
+    _checkMapInitialization();
   }
 
-  Future<void> fetchAndPlotPhotoMetadata() async {
-    if (timeframe == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a timeframe first.')),
-      );
-      return;
-    }
-    final photo.PermissionState state =
-        await photo.PhotoManager.requestPermissionExtend();
-    if (!state.isAuth) {
-      print('Photo access denied.');
-      return;
-    }
+  void _checkMapInitialization() {
+    const Duration checkInterval = Duration(milliseconds: 100);
+    Timer.periodic(checkInterval, (timer) {
+      if (widget.mapManager.isInitialized) {
+        setState(() {
+          isMapInitialized = true;
+          print("MapManager is initialized: $isMapInitialized");
+        });
+        timer.cancel();
 
-    try {
-      List<photo.AssetPathEntity> albums = await photo.PhotoManager.getAssetPathList(
-        type: photo.RequestType.image,
-      );
-      if (albums.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No photo albums found.')),
-        );
-        return;
+        // Once map is ready, invoke the callback if provided
+        widget.onMapInitialized?.call();
       }
-
-      photo.AssetPathEntity recentAlbum = albums[0];
-      List<photo.AssetEntity> userPhotos =
-          await recentAlbum.getAssetListPaged(page: 0, size: 100);
-
-      if (userPhotos.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No photos found in the album.')),
-        );
-        return;
-      }
-
-      photoLocations.clear();
-      final start = timeframe!.start;
-      final end = timeframe!.end;
-
-      for (photo.AssetEntity photoEntity in userPhotos) {
-        if (photoEntity.latitude != null &&
-            photoEntity.longitude != null &&
-            photoEntity.createDateTime.isAfter(start) &&
-            photoEntity.createDateTime.isBefore(end)) {
-          photoLocations.add(Location(
-            latitude: photoEntity.latitude!,
-            longitude: photoEntity.longitude!,
-            timestamp: photoEntity.createDateTime.toIso8601String(),
-          ));
-
-          print('Photo Metadata:');
-          print('  File Name: ${photoEntity.title}');
-          print('  Latitude: ${photoEntity.latitude}');
-          print('  Longitude: ${photoEntity.longitude}');
-          print('  Created At: ${photoEntity.createDateTime}');
-          print('  Modified At: ${photoEntity.modifiedDateTime}');
-          print('  Asset ID: ${photoEntity.id}');
-        }
-    }
-
-
-      if (photoLocations.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No photos found in the selected timeframe.')),
-        );
-      } else {
-        widget.mapManager.plotLocationsOnMap(photoLocations);
-      }
-    } catch (e) {
-      print('Error fetching photo metadata: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching photo metadata.')),
-      );
-    }
+    });
   }
 
-  // ---------------------
-  // CREATE / EDIT
-  // ---------------------
   Future<void> _createTrip(
     String tripTitle,
     DateTimeRange timeRange,
@@ -183,7 +116,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         trips = updated;
         titleController.clear();
         timeframe = null;
-        photoLocations.clear();
         isCreatingTrip = false;
         currentChildSize = 0.25;
       });
@@ -214,7 +146,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         editingTripId = null;
         titleController.clear();
         timeframe = null;
-        photoLocations.clear();
         isEditingTrip = false;
         currentChildSize = 0.25;
       });
@@ -223,22 +154,16 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
   }
 
-  // ---------------------
-  // MERGE
-  // ---------------------
   void _mergeSelectedTrips() {
     if (selectedTripIds.length < 2) {
       print("Need at least 2 trips to merge.");
       return;
     }
-
-    // We'll pick a default name based on earliest trip, etc.
-    // Then show a Cupertino dialog to gather a final name
-    // After user chooses "Merge & Keep" or "Merge & Delete," we call below:
-    _performTripMerge( /* userTitle */ "Merged Trip", /* deleteOldTrips */ false);
+    _performTripMerge("Merged Trip", false);
   }
 
-  Future<void> _performTripMerge(String mergedTripName, bool deleteOldTrips) async {
+  Future<void> _performTripMerge(
+      String mergedTripName, bool deleteOldTrips) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -260,9 +185,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
   }
 
-  // ---------------------
-  // SPLIT
-  // ---------------------
   Future<void> _performTripSplit(DateTime splitDate) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || editingTripId == null) return;
@@ -288,9 +210,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
   }
 
-  // ---------------------
-  // DELETE
-  // ---------------------
   Future<bool> _confirmSwipeDelete(Map<String, dynamic> trip) async {
     final tripTitle = trip['title'] ?? 'Untitled Trip';
     return await showDialog<bool>(
@@ -386,73 +305,75 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
   }
 
-  // ---------------------
-  // UI BUILDER
-  // ---------------------
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // The map
         MapWidget(
+          key: const ValueKey('unique_map_widget'),
           cameraOptions: CameraOptions(
             center: Point(coordinates: Position(0, 0)),
             zoom: 2.0,
           ),
           onMapCreated: _onMapCreated,
         ),
-        // Draggable sheet
-        DraggableScrollableSheet(
-          initialChildSize: currentChildSize,
-          minChildSize: 0.25,
-          maxChildSize: 0.5,
-          builder: (context, scrollController) {
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  currentChildSize = (currentChildSize == 0.25) ? 0.5 : 0.25;
-                });
-              },
-              child: AnimatedContainer(
-                duration: Duration(milliseconds: 300),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 10,
-                    ),
-                  ],
+
+        if (!isMapInitialized)
+          const Center(child: CircularProgressIndicator()),
+
+        AbsorbPointer(
+          absorbing: !isMapInitialized,
+          child: DraggableScrollableSheet(
+            initialChildSize: currentChildSize,
+            minChildSize: 0.25,
+            maxChildSize: 0.5,
+            builder: (context, scrollController) {
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    currentChildSize =
+                        (currentChildSize == 0.25) ? 0.5 : 0.25;
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(20)),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: _buildTopRow(),
+                      ),
+                      Divider(thickness: 1, color: Colors.grey[300]),
+                      Expanded(
+                        child: _buildChildContent(scrollController),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    // The top row (with Select / Merge / X or +)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: _buildTopRow(),
-                    ),
-                    Divider(thickness: 1, color: Colors.grey[300]),
-                    Expanded(
-                      child: _buildChildContent(scrollController),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ],
     );
   }
 
   Widget _buildTopRow() {
-    // If in selection mode, show the "Merge / Deselect / Delete" row
     if (isSelecting) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Merge button (grayed out if <2 selected)
           TextButton(
             onPressed: selectedTripIds.length > 1 ? _mergeSelectedTrips : null,
             child: Text(
@@ -464,7 +385,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
               ),
             ),
           ),
-          // Deselect
           TextButton(
             onPressed: () {
               setState(() {
@@ -475,7 +395,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             child: Text("Deselect",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
-          // Delete
           TextButton(
             onPressed: selectedTripIds.isNotEmpty ? _confirmDeleteSelected : null,
             child: Text(
@@ -491,7 +410,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
       );
     }
 
-    // Otherwise, normal top row
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -501,7 +419,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         ),
         Row(
           children: [
-            // "Select" if not editing, creating, or viewing
             if (!isEditingTrip && !isCreatingTrip && !isViewingTrip)
               TextButton(
                 onPressed: () {
@@ -512,9 +429,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                 },
                 child: Text("Select"),
               ),
-
-            // If we are editing or creating, show an X to close. Otherwise, show +.
-            if (isEditingTrip || isCreatingTrip)
+            if (isEditingTrip || isCreatingTrip || isViewingTrip)
               IconButton(
                 icon: Icon(Icons.close),
                 onPressed: () {
@@ -523,7 +438,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                       isCreatingTrip = false;
                       titleController.clear();
                       timeframe = null;
-                      photoLocations.clear();
                       editingTripId = null;
                     }
                     if (isEditingTrip) {
@@ -531,7 +445,9 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                       editingTripId = null;
                       titleController.clear();
                       timeframe = null;
-                      photoLocations.clear();
+                    }
+                    if (isViewingTrip) {
+                      isViewingTrip = false;
                     }
                     currentChildSize = 0.25;
                   });
@@ -547,7 +463,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                     isViewingTrip = false;
                     titleController.clear();
                     timeframe = null;
-                    photoLocations.clear();
                     editingTripId = null;
                     currentChildSize = 0.5;
                   });
@@ -568,28 +483,65 @@ class _MyTripsSectionState extends State<MyTripsSection> {
 
   Widget _buildChildContent(ScrollController scrollController) {
     if (isEditingTrip) {
-      // Show EditTripScreen
       return EditTripScreen(
         titleController: titleController,
         timeframe: timeframe,
-        photoLocations: photoLocations,
+        photoLocations: [],
         onPickDateRange: _pickDateRange,
-        onFetchMetadata: fetchAndPlotPhotoMetadata,
+        onFetchMetadata: () async {
+          if (!isMapInitialized) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Map is not ready yet.')),
+            );
+            return;
+          }
+          if (timeframe == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Please pick a date range first.')),
+            );
+            return;
+          }
+          // Call the new fetchPhotoMetadata 
+          await CustomPhotoManager.fetchPhotoMetadata(
+            context: context,
+            timeframe: timeframe!,
+          );
+          // Then refresh local trips
+          await _loadTrips();
+        },
         onUpdateTrip: _updateTrip,
         onSplitDate: _performTripSplit,
       );
     } else if (isCreatingTrip) {
-      // Show CreateTripScreen
       return CreateTripScreen(
         titleController: titleController,
         timeframe: timeframe,
-        photoLocations: photoLocations,
+        photoLocations: [],
         onPickDateRange: _pickDateRange,
-        onFetchMetadata: fetchAndPlotPhotoMetadata,
+        onFetchMetadata: () async {
+          if (!isMapInitialized) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Map is not ready yet.')),
+            );
+            return;
+          }
+          if (timeframe == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Please pick a date range first.')),
+            );
+            return;
+          }
+          // fetch from device, store in firebase
+          await CustomPhotoManager.fetchPhotoMetadata(
+            context: context,
+            timeframe: timeframe!,
+          );
+          // reload the local trips to see new data
+          await _loadTrips();
+        },
         onSaveTrip: _createTrip,
       );
     } else if (isViewingTrip && selectedTrip != null) {
-      // Show Trip Details
       return TripDetailView(
         trip: selectedTrip!,
         onBack: () {
@@ -601,10 +553,8 @@ class _MyTripsSectionState extends State<MyTripsSection> {
           widget.mapManager.zoomBackOut();
           widget.mapManager.setViewingTrip(false);
         },
-
       );
     } else {
-      // Show the main MyTripList
       return MyTripList(
         trips: trips,
         isSelecting: isSelecting,
@@ -618,10 +568,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             isCreatingTrip = false;
             currentChildSize = 0.5;
           });
-
           widget.mapManager.setViewingTrip(false);
-
-          // Move the camera to the first location of the selected trip
           if (trip['locations'] != null && trip['locations'].isNotEmpty) {
             final firstLocation = trip['locations'][0];
             widget.mapManager.flyToLocation(
@@ -630,12 +577,10 @@ class _MyTripsSectionState extends State<MyTripsSection> {
             );
           }
         },
-
         onEditTrip: (trip) {
-          // Pre-fill
           final title = trip['title'] ?? '';
           final startIso = trip['timeframe']?['start'] ?? '';
-          final endIso   = trip['timeframe']?['end']   ?? '';
+          final endIso = trip['timeframe']?['end'] ?? '';
           titleController.text = title;
           if (startIso.isNotEmpty && endIso.isNotEmpty) {
             final s = DateTime.parse(startIso);
@@ -651,7 +596,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
           });
         },
         onToggleSelection: (tripId, checked) {
-          // Called from MyTripList to toggle selection
           setState(() {
             if (checked) {
               selectedTripIds.add(tripId);
@@ -664,7 +608,6 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     }
   }
 
-  // Let the user pick a date range in either create/edit
   Future<void> _pickDateRange() async {
     final pickedRange = await showDateRangePicker(
       context: context,
@@ -676,5 +619,29 @@ class _MyTripsSectionState extends State<MyTripsSection> {
         timeframe = pickedRange;
       });
     }
+  }
+
+  Widget _buildTripDateRange(Map<String, dynamic> trip) {
+    final timeframe = trip['timeframe'];
+    if (timeframe == null) return const Text('');
+    
+    final startDate = DateTime.parse(timeframe['start']);
+    final endDate = DateTime.parse(timeframe['end']);
+    
+    // If start and end dates are the same, show single date
+    if (startDate.year == endDate.year && 
+        startDate.month == endDate.month && 
+        startDate.day == endDate.day) {
+      return Text(
+        DateFormat('MMM d, yyyy').format(startDate),
+        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+      );
+    }
+    
+    // Otherwise show date range
+    return Text(
+      '${DateFormat('MMM d').format(startDate)} - ${DateFormat('MMM d, yyyy').format(endDate)}',
+      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+    );
   }
 }

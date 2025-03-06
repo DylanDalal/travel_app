@@ -1,0 +1,392 @@
+[
+  {
+    "name": "Havana",
+    "latitude": 23.135305,
+    "longitude": -82.3589631
+  },
+  {
+    "name": "Pinar del Rio",
+    "latitude": 22.4167422,
+    "longitude": -83.7002582
+  },
+  {
+    "name": "Oranjestad",
+    "latitude": 12.5201024,
+    "longitude": -70.0371329
+  },
+  {
+    "name": "Willemstad",
+    "latitude": 12.1066695,
+    "longitude": -68.9351307
+  },
+  {
+    "name": "Kralendijk",
+    "latitude": 12.1472869,
+    "longitude": -68.2740206
+  },
+  {
+    "name": "San Juan",
+    "latitude": 18.465299,
+    "longitude": -66.116666
+  },
+  {
+    "name": "Kingston",
+    "latitude": 17.9712148,
+    "longitude": -76.7928128
+  },
+  {
+    "name": "Nassau",
+    "latitude": 25.0782266,
+    "longitude": -77.3383438
+  },
+  {
+    "name": "Managua",
+    "latitude": 12.1544035,
+    "longitude": -86.2737642
+  },
+  {
+    "name": "Basseterre",
+    "latitude": 17.2960919,
+    "longitude": -62.722301
+  },
+  {
+    "name": "San Jose",
+    "latitude": 9.9325427,
+    "longitude": -84.0795782
+  },
+  {
+    "name": "San Salvador",
+    "latitude": 13.6989939,
+    "longitude": -89.1914249
+  },
+  {
+    "name": "David",
+    "latitude": 8.4371469,
+    "longitude": -82.4286281
+  },
+  {
+    "name": "St. George's",
+    "latitude": 12.0535331,
+    "longitude": -61.751805
+  },
+  {
+    "name": "Kingstown",
+    "latitude": 13.1561864,
+    "longitude": -61.2279621
+  },
+  {
+    "name": "Bridgetown",
+    "latitude": 13.0977832,
+    "longitude": -59.6184184
+  },
+  {
+    "name": "Santiago de los Caballeros",
+    "latitude": 19.4503932,
+    "longitude": -70.6909047
+  },
+  {
+    "name": "La Romana",
+    "latitude": 18.4230137,
+    "longitude": -68.9661104
+  },
+  {
+    "name": "Samana",
+    "latitude": 19.2036865,
+    "longitude": -69.3389611
+  },
+  {
+    "name": "Sancti Spiritus",
+    "latitude": 21.9275667,
+    "longitude": -79.443211
+  },
+  {
+    "name": "Camaguey",
+    "latitude": 21.3791765,
+    "longitude": -77.9183681
+  },
+  {
+    "name": "Holguin",
+    "latitude": 20.8869704,
+    "longitude": -76.2591995
+  },
+  {
+    "name": "Santiago de Cuba",
+    "latitude": 20.0214263,
+    "longitude": -75.8294928
+  },
+  {
+    "name": "Philipsburg",
+    "latitude": 18.0250713,
+    "longitude": -63.0483073
+  },
+  {
+    "name": "Marigot",
+    "latitude": 18.0668544,
+    "longitude": -63.0848869
+  },
+  {
+    "name": "Heredia",
+    "latitude": 9.9981515,
+    "longitude": -84.1170163
+  },
+  {
+    "name": "The Bottom",
+    "latitude": 17.6263487,
+    "longitude": -63.2490017
+  },
+  {
+    "name": "Road Town",
+    "latitude": 18.425766,
+    "longitude": -64.6230914
+  },
+  {
+    "name": "Charlotte Amalie",
+    "latitude": 18.3414575,
+    "longitude": -64.9335173
+  },
+  {
+    "name": "Belmopan",
+    "latitude": 17.250199,
+    "longitude": -88.770018
+  },
+  {
+    "name": "Port-au-Prince",
+    "latitude": 18.547327,
+    "longitude": -72.3395928
+  },
+  {
+    "name": "Gonaives",
+    "latitude": 19.4460597,
+    "longitude": -72.6884336
+  },
+  {
+    "name": "Cap-Haitien",
+    "latitude": 19.7595236,
+    "longitude": -72.2008068
+  },
+  {
+    "name": "Port-de-Paix",
+    "latitude": 19.9389855,
+    "longitude": -72.8308129
+  },
+  {
+    "name": "Cockburn Town",
+    "latitude": 21.4607723,
+    "longitude": -71.1399956
+  },
+  {
+    "name": "Varadero",
+    "latitude": 23.149578,
+    "longitude": -81.260025
+  },
+  {
+    "name": "Esteli",
+    "latitude": 13.0931241,
+    "longitude": -86.3554436
+  },
+  {
+    "name": "Jinotepe",
+    "latitude": 11.8478476,
+    "longitude": -86.1992469
+  },
+  {
+    "name": "La Ceiba",
+    "latitude": 15.7833743,
+    "longitude": -86.7917749
+  },
+  {
+    "name": "Tegucigalpa",
+    "latitude": 14.1057433,
+    "longitude": -87.2040052
+  },
+  {
+    "name": "Santo Domingo",
+    "latitude": 18.4801972,
+    "longitude": -69.942111
+  },
+  {
+    "name": "Brades",
+    "latitude": 16.7890601,
+    "longitude": -62.208731
+  },
+  {
+    "name": "St. John's",
+    "latitude": 17.1184569,
+    "longitude": -61.8448509
+  },
+  {
+    "name": "Tortuguero",
+    "latitude": 10.5420309,
+    "longitude": -83.5027623
+  },
+  {
+    "name": "San Antonio de los Banos",
+    "latitude": 22.8889379,
+    "longitude": -82.5045048
+  },
+  {
+    "name": "Guatemala City",
+    "latitude": 14.6416142,
+    "longitude": -90.5132836
+  },
+  {
+    "name": "Baguanos",
+    "latitude": 20.7521089,
+    "longitude": -76.0259693
+  },
+  {
+    "name": "Petion-Ville",
+    "latitude": 18.5132181,
+    "longitude": -72.2860209
+  },
+  {
+    "name": "Saint-Marc",
+    "latitude": 19.1020269,
+    "longitude": -72.699511
+  },
+  {
+    "name": "Desdunes",
+    "latitude": 19.295496,
+    "longitude": -72.6460478
+  },
+  {
+    "name": "Hinche",
+    "latitude": 19.1445541,
+    "longitude": -72.0087527
+  },
+  {
+    "name": "Fort-Liberte",
+    "latitude": 19.6635608,
+    "longitude": -71.8367046
+  },
+  {
+    "name": "Miragoane",
+    "latitude": 18.4448425,
+    "longitude": -73.0886392
+  },
+  {
+    "name": "Anse a Foleur",
+    "latitude": 19.892321,
+    "longitude": -72.6198286
+  },
+  {
+    "name": "Verrettes",
+    "latitude": 19.0507554,
+    "longitude": -72.4673576
+  },
+  {
+    "name": "George Town",
+    "latitude": 19.2953549,
+    "longitude": -81.3807776
+  },
+  {
+    "name": "Masaya",
+    "latitude": 11.9736474,
+    "longitude": -86.0960547
+  },
+  {
+    "name": "Grey Town",
+    "latitude": 10.946566,
+    "longitude": -83.7356688
+  },
+  {
+    "name": "Panama City",
+    "latitude": 8.9714493,
+    "longitude": -79.5341802
+  },
+  {
+    "name": "Les Cayes",
+    "latitude": 18.1944428,
+    "longitude": -73.7511601
+  },
+  {
+    "name": "Freeport",
+    "latitude": 26.535681,
+    "longitude": -78.6953623
+  },
+  {
+    "name": "Mayaguez",
+    "latitude": 18.2011161,
+    "longitude": -67.1391124
+  },
+  {
+    "name": "The Valley",
+    "latitude": 18.2145861,
+    "longitude": -63.0517759
+  },
+  {
+    "name": "Tacajo",
+    "latitude": 20.846883,
+    "longitude": -75.9442983
+  },
+  {
+    "name": "Puerto Armuelles",
+    "latitude": 8.2725603,
+    "longitude": -82.8604458
+  },
+  {
+    "name": "Big Bay",
+    "latitude": 9.2433108,
+    "longitude": -82.289111
+  },
+  {
+    "name": "Sensuntepeque",
+    "latitude": 13.8761841,
+    "longitude": -88.6284918
+  },
+  {
+    "name": "Coban",
+    "latitude": 15.4702001,
+    "longitude": -90.3735065
+  },
+  {
+    "name": "Port of Spain",
+    "latitude": 10.6572678,
+    "longitude": -61.5180173
+  },
+  {
+    "name": "Waspam",
+    "latitude": 14.7407239,
+    "longitude": -83.9726195
+  },
+  {
+    "name": "Pearl Lagoon",
+    "latitude": 12.3428308,
+    "longitude": -83.6714274
+  },
+  {
+    "name": "Florida",
+    "latitude": 21.5268861,
+    "longitude": -78.2258106
+  },
+  {
+    "name": "Castries",
+    "latitude": 14.0095966,
+    "longitude": -60.9902359
+  },
+  {
+    "name": "Roseau",
+    "latitude": 15.2991923,
+    "longitude": -61.3872868
+  },
+  {
+    "name": "Guantanamo",
+    "latitude": 20.1431797,
+    "longitude": -75.2034783
+  },
+  {
+    "name": "Jinotega",
+    "latitude": 13.0910392,
+    "longitude": -86.0023584
+  },
+  {
+    "name": "Ustupo",
+    "latitude": 9.1299211,
+    "longitude": -77.9267682
+  },
+  {
+    "name": "Villa Nueva",
+    "latitude": 14.5308826,
+    "longitude": -90.5963325
+  }
+]

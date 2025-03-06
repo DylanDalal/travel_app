@@ -1,0 +1,1202 @@
+[
+  {
+    "name": "Wellington",
+    "latitude": -41.2887953,
+    "longitude": 174.7772114
+  },
+  {
+    "name": "Sydney",
+    "latitude": -33.8698439,
+    "longitude": 151.2082848
+  },
+  {
+    "name": "Tuncurry",
+    "latitude": -32.1755506,
+    "longitude": 152.4982615
+  },
+  {
+    "name": "Melbourne",
+    "latitude": -37.8142454,
+    "longitude": 144.9631732
+  },
+  {
+    "name": "Canberra",
+    "latitude": -35.2975906,
+    "longitude": 149.1012676
+  },
+  {
+    "name": "Port Macquarie",
+    "latitude": -31.4299499,
+    "longitude": 152.9103525
+  },
+  {
+    "name": "Newcastle",
+    "latitude": -32.9272881,
+    "longitude": 151.7812534
+  },
+  {
+    "name": "Devonport",
+    "latitude": -41.1797561,
+    "longitude": 146.3613011
+  },
+  {
+    "name": "Perth",
+    "latitude": -31.9558933,
+    "longitude": 115.8605855
+  },
+  {
+    "name": "Alice Springs",
+    "latitude": -23.6983884,
+    "longitude": 133.8812885
+  },
+  {
+    "name": "Port Augusta",
+    "latitude": -32.4908819,
+    "longitude": 137.7639874
+  },
+  {
+    "name": "Cairns",
+    "latitude": -16.9206657,
+    "longitude": 145.7721854
+  },
+  {
+    "name": "Goulburn",
+    "latitude": -34.7523871,
+    "longitude": 149.7198009
+  },
+  {
+    "name": "Kununurra",
+    "latitude": -15.7730916,
+    "longitude": 128.738839
+  },
+  {
+    "name": "Kalgoorlie",
+    "latitude": -30.7464139,
+    "longitude": 121.473223
+  },
+  {
+    "name": "Mildura",
+    "latitude": -34.195274,
+    "longitude": 142.1503146
+  },
+  {
+    "name": "Bendigo",
+    "latitude": -36.7590183,
+    "longitude": 144.2826718
+  },
+  {
+    "name": "Burnie",
+    "latitude": -41.0523688,
+    "longitude": 145.9064073
+  },
+  {
+    "name": "Geraldton",
+    "latitude": -28.77035,
+    "longitude": 114.6147159
+  },
+  {
+    "name": "Geelong",
+    "latitude": -38.1493248,
+    "longitude": 144.3598241
+  },
+  {
+    "name": "Moruya",
+    "latitude": -35.9098127,
+    "longitude": 150.0820002
+  },
+  {
+    "name": "Queanbeyan",
+    "latitude": -35.3524518,
+    "longitude": 149.2337634
+  },
+  {
+    "name": "Port Hedland",
+    "latitude": -20.3111814,
+    "longitude": 118.5801181
+  },
+  {
+    "name": "Nelson",
+    "latitude": -41.2710849,
+    "longitude": 173.2836756
+  },
+  {
+    "name": "Taupo",
+    "latitude": -38.6866197,
+    "longitude": 176.0694773
+  },
+  {
+    "name": "Rotorua",
+    "latitude": -38.1381493,
+    "longitude": 176.252922
+  },
+  {
+    "name": "Broome",
+    "latitude": -17.9566909,
+    "longitude": 122.2240181
+  },
+  {
+    "name": "Captains Flat",
+    "latitude": -35.5885042,
+    "longitude": 149.4495633
+  },
+  {
+    "name": "Blenheim",
+    "latitude": -41.5118691,
+    "longitude": 173.9545856
+  },
+  {
+    "name": "Palmerston North",
+    "latitude": -40.356317,
+    "longitude": 175.6112388
+  },
+  {
+    "name": "Napier",
+    "latitude": -39.4902099,
+    "longitude": 176.917839
+  },
+  {
+    "name": "Hastings",
+    "latitude": -39.6417678,
+    "longitude": 176.8430781
+  },
+  {
+    "name": "Porirua",
+    "latitude": -41.1354217,
+    "longitude": 174.8397824
+  },
+  {
+    "name": "Hobart",
+    "latitude": -42.8825088,
+    "longitude": 147.3281233
+  },
+  {
+    "name": "Thames",
+    "latitude": -37.137983,
+    "longitude": 175.5418037
+  },
+  {
+    "name": "Bega",
+    "latitude": -36.6780983,
+    "longitude": 149.8408283
+  },
+  {
+    "name": "Mount Gambier",
+    "latitude": -37.8301386,
+    "longitude": 140.7842627
+  },
+  {
+    "name": "Armidale",
+    "latitude": -30.5144881,
+    "longitude": 151.6656564
+  },
+  {
+    "name": "New Plymouth",
+    "latitude": -39.0579941,
+    "longitude": 174.0806474
+  },
+  {
+    "name": "Tauranga",
+    "latitude": -37.6859006,
+    "longitude": 176.167505
+  },
+  {
+    "name": "Gisborne",
+    "latitude": -38.661326,
+    "longitude": 178.0206487
+  },
+  {
+    "name": "Hamilton",
+    "latitude": -37.7878809,
+    "longitude": 175.281788
+  },
+  {
+    "name": "Ngaruawahia",
+    "latitude": -37.6662658,
+    "longitude": 175.1500534
+  },
+  {
+    "name": "Tirau",
+    "latitude": -37.976753,
+    "longitude": 175.7587725
+  },
+  {
+    "name": "Whangamata",
+    "latitude": -37.2063323,
+    "longitude": 175.8719724
+  },
+  {
+    "name": "Portland",
+    "latitude": -38.3456231,
+    "longitude": 141.6042304
+  },
+  {
+    "name": "Maryborough",
+    "latitude": -25.537583,
+    "longitude": 152.7019182
+  },
+  {
+    "name": "Masterton",
+    "latitude": -40.9495524,
+    "longitude": 175.6594413
+  },
+  {
+    "name": "Hawera",
+    "latitude": -39.5893462,
+    "longitude": 174.2837207
+  },
+  {
+    "name": "Otorohanga",
+    "latitude": -38.186037,
+    "longitude": 175.2112083
+  },
+  {
+    "name": "Te Kuiti",
+    "latitude": -38.3341925,
+    "longitude": 175.1657117
+  },
+  {
+    "name": "Pukekohe",
+    "latitude": -37.2006384,
+    "longitude": 174.9036875
+  },
+  {
+    "name": "Whangarei",
+    "latitude": -35.7275268,
+    "longitude": 174.3194202
+  },
+  {
+    "name": "Yass",
+    "latitude": -34.8418629,
+    "longitude": 148.9110055
+  },
+  {
+    "name": "Mount Hagen",
+    "latitude": -5.858784,
+    "longitude": 144.2316365
+  },
+  {
+    "name": "Lae",
+    "latitude": -6.7301976,
+    "longitude": 147.0008109
+  },
+  {
+    "name": "Orange",
+    "latitude": -33.2820463,
+    "longitude": 149.0971567
+  },
+  {
+    "name": "Broken Hill",
+    "latitude": -31.965,
+    "longitude": 141.4511111
+  },
+  {
+    "name": "Dubbo",
+    "latitude": -32.2478964,
+    "longitude": 148.6026502
+  },
+  {
+    "name": "Tamworth",
+    "latitude": -31.0900743,
+    "longitude": 150.9290159
+  },
+  {
+    "name": "Lismore",
+    "latitude": -28.8077608,
+    "longitude": 153.2791883
+  },
+  {
+    "name": "Port Vila",
+    "latitude": -17.7414972,
+    "longitude": 168.3150163
+  },
+  {
+    "name": "Blackheath",
+    "latitude": -33.6338889,
+    "longitude": 150.2847222
+  },
+  {
+    "name": "Swan Hill",
+    "latitude": -35.3390784,
+    "longitude": 143.5588436
+  },
+  {
+    "name": "Kerang",
+    "latitude": -35.7338373,
+    "longitude": 143.9204152
+  },
+  {
+    "name": "Gold Coast",
+    "latitude": -28.0023731,
+    "longitude": 153.4145987
+  },
+  {
+    "name": "Gordonvale",
+    "latitude": -17.0981626,
+    "longitude": 145.7759747
+  },
+  {
+    "name": "Paekakariki",
+    "latitude": -40.9883074,
+    "longitude": 174.9514432
+  },
+  {
+    "name": "Fairlie",
+    "latitude": -44.097582,
+    "longitude": 170.8289409
+  },
+  {
+    "name": "Twizel",
+    "latitude": -44.257483,
+    "longitude": 170.0994145
+  },
+  {
+    "name": "Greymouth",
+    "latitude": -42.4499469,
+    "longitude": 171.2079875
+  },
+  {
+    "name": "Westport",
+    "latitude": -41.754183,
+    "longitude": 171.6035684
+  },
+  {
+    "name": "Wanaka",
+    "latitude": -44.6941691,
+    "longitude": 169.1364637
+  },
+  {
+    "name": "Lake Hawea",
+    "latitude": -44.6126727,
+    "longitude": 169.2640547
+  },
+  {
+    "name": "Franz Josef",
+    "latitude": -43.3889668,
+    "longitude": 170.1819048
+  },
+  {
+    "name": "Aireys Inlet",
+    "latitude": -38.4620894,
+    "longitude": 144.1067555
+  },
+  {
+    "name": "Upper Hutt",
+    "latitude": -41.1240674,
+    "longitude": 175.0699589
+  },
+  {
+    "name": "Otaki",
+    "latitude": -40.7585374,
+    "longitude": 175.1470152
+  },
+  {
+    "name": "Ballarat",
+    "latitude": -37.5623013,
+    "longitude": 143.8605645
+  },
+  {
+    "name": "Castle Hill Village",
+    "latitude": -43.208481,
+    "longitude": 171.7158546
+  },
+  {
+    "name": "Marahau",
+    "latitude": -41.0061336,
+    "longitude": 173.0086156
+  },
+  {
+    "name": "Kaikoura",
+    "latitude": -42.4005999,
+    "longitude": 173.6811428
+  },
+  {
+    "name": "Mapua",
+    "latitude": -41.25321,
+    "longitude": 173.0962191
+  },
+  {
+    "name": "Oamaru",
+    "latitude": -45.0997681,
+    "longitude": 170.9684232
+  },
+  {
+    "name": "Balclutha",
+    "latitude": -46.2377982,
+    "longitude": 169.7398641
+  },
+  {
+    "name": "Hanga Roa",
+    "latitude": -27.1481172,
+    "longitude": -109.427344
+  },
+  {
+    "name": "Port Moresby",
+    "latitude": -9.4743301,
+    "longitude": 147.1599504
+  },
+  {
+    "name": "Launceston",
+    "latitude": -41.4340813,
+    "longitude": 147.1373496
+  },
+  {
+    "name": "Bundaberg",
+    "latitude": -24.8653253,
+    "longitude": 152.3516785
+  },
+  {
+    "name": "Charleville",
+    "latitude": -26.406265,
+    "longitude": 146.2420417
+  },
+  {
+    "name": "Quilpie",
+    "latitude": -26.6152947,
+    "longitude": 144.2696118
+  },
+  {
+    "name": "Mahebourg",
+    "latitude": -20.4111041,
+    "longitude": 57.7060616
+  },
+  {
+    "name": "Gladstone",
+    "latitude": -23.8431724,
+    "longitude": 151.256132
+  },
+  {
+    "name": "Mount Isa",
+    "latitude": -20.7289898,
+    "longitude": 139.4931522
+  },
+  {
+    "name": "Cloncurry",
+    "latitude": -20.7051873,
+    "longitude": 140.5058305
+  },
+  {
+    "name": "Karumba",
+    "latitude": -17.4876079,
+    "longitude": 140.8404027
+  },
+  {
+    "name": "Whakatane",
+    "latitude": -37.9519223,
+    "longitude": 176.9945977
+  },
+  {
+    "name": "Coles Bay",
+    "latitude": -42.125218,
+    "longitude": 148.2885381
+  },
+  {
+    "name": "Whyalla",
+    "latitude": -33.0382085,
+    "longitude": 137.5843572
+  },
+  {
+    "name": "Port Lincoln",
+    "latitude": -34.7211905,
+    "longitude": 135.8592218
+  },
+  {
+    "name": "Saint Arnaud",
+    "latitude": -41.8013578,
+    "longitude": 172.8477856
+  },
+  {
+    "name": "Papeete",
+    "latitude": -17.5373835,
+    "longitude": -149.5659964
+  },
+  {
+    "name": "Ashburton",
+    "latitude": -43.9024396,
+    "longitude": 171.7503327
+  },
+  {
+    "name": "Avarua",
+    "latitude": -21.2074736,
+    "longitude": -159.7708145
+  },
+  {
+    "name": "Nambour",
+    "latitude": -26.6257326,
+    "longitude": 152.959953
+  },
+  {
+    "name": "Kyneton",
+    "latitude": -37.247494,
+    "longitude": 144.4552171
+  },
+  {
+    "name": "Kawakawa",
+    "latitude": -35.3800271,
+    "longitude": 174.0671827
+  },
+  {
+    "name": "Ratana",
+    "latitude": -40.038991,
+    "longitude": 175.17612
+  },
+  {
+    "name": "Turangi",
+    "latitude": -38.9887347,
+    "longitude": 175.8089539
+  },
+  {
+    "name": "Ararat",
+    "latitude": -37.2834165,
+    "longitude": 142.9319447
+  },
+  {
+    "name": "Sheffield",
+    "latitude": -43.3891595,
+    "longitude": 172.0211299
+  },
+  {
+    "name": "Waddington",
+    "latitude": -43.3973611,
+    "longitude": 172.0337067
+  },
+  {
+    "name": "Rabaul",
+    "latitude": -4.1984592,
+    "longitude": 152.1728287
+  },
+  {
+    "name": "Auckland",
+    "latitude": -36.852095,
+    "longitude": 174.7631803
+  },
+  {
+    "name": "Matata",
+    "latitude": -37.8896723,
+    "longitude": 176.7564582
+  },
+  {
+    "name": "Eketahuna",
+    "latitude": -40.6466355,
+    "longitude": 175.7033205
+  },
+  {
+    "name": "Exmouth",
+    "latitude": -21.9324401,
+    "longitude": 114.1258094
+  },
+  {
+    "name": "Newman",
+    "latitude": -23.357394,
+    "longitude": 119.7331631
+  },
+  {
+    "name": "Yaren",
+    "latitude": -0.5471064,
+    "longitude": 166.9163479
+  },
+  {
+    "name": "Ohakune",
+    "latitude": -39.4169455,
+    "longitude": 175.3996126
+  },
+  {
+    "name": "Waiouru",
+    "latitude": -39.4772125,
+    "longitude": 175.6697752
+  },
+  {
+    "name": "Putaruru",
+    "latitude": -38.0511675,
+    "longitude": 175.7789554
+  },
+  {
+    "name": "Featherston",
+    "latitude": -41.1168142,
+    "longitude": 175.3227241
+  },
+  {
+    "name": "Naseby",
+    "latitude": -45.0249757,
+    "longitude": 170.1460085
+  },
+  {
+    "name": "Porangahau",
+    "latitude": -40.3030539,
+    "longitude": 176.6138825
+  },
+  {
+    "name": "Raglan",
+    "latitude": -37.7997729,
+    "longitude": 174.8682464
+  },
+  {
+    "name": "Takaka",
+    "latitude": -40.8574983,
+    "longitude": 172.8062424
+  },
+  {
+    "name": "Majuro",
+    "latitude": 7.0909924,
+    "longitude": 171.3816354
+  },
+  {
+    "name": "Apia",
+    "latitude": -13.8345235,
+    "longitude": -171.7630955
+  },
+  {
+    "name": "Opotiki",
+    "latitude": -38.0042441,
+    "longitude": 177.2871265
+  },
+  {
+    "name": "Warakurna",
+    "latitude": -25.0006287,
+    "longitude": 128.2865595
+  },
+  {
+    "name": "Papulankutja",
+    "latitude": -25.9974077,
+    "longitude": 128.2826087
+  },
+  {
+    "name": "Puhoi",
+    "latitude": -36.5120922,
+    "longitude": 174.6611196
+  },
+  {
+    "name": "Merauke",
+    "latitude": -8.4902766,
+    "longitude": 140.395582
+  },
+  {
+    "name": "Kaitaia",
+    "latitude": -35.1140609,
+    "longitude": 173.264022
+  },
+  {
+    "name": "Mangonui",
+    "latitude": -34.992899,
+    "longitude": 173.5323214
+  },
+  {
+    "name": "Christchurch",
+    "latitude": -43.530955,
+    "longitude": 172.6364343
+  },
+  {
+    "name": "Otane",
+    "latitude": -39.8963011,
+    "longitude": 176.6273539
+  },
+  {
+    "name": "Dededo",
+    "latitude": 13.5167272,
+    "longitude": 144.8391381
+  },
+  {
+    "name": "Vaiaku",
+    "latitude": -8.5254131,
+    "longitude": 179.1945328
+  },
+  {
+    "name": "Wangaratta",
+    "latitude": -36.356434,
+    "longitude": 146.3228311
+  },
+  {
+    "name": "Thargomindah",
+    "latitude": -27.9959679,
+    "longitude": 143.8203995
+  },
+  {
+    "name": "South Tarawa",
+    "latitude": 1.3490778,
+    "longitude": 173.0386512
+  },
+  {
+    "name": "Melekeok",
+    "latitude": 7.4954144,
+    "longitude": 134.636753
+  },
+  {
+    "name": "Kumeu",
+    "latitude": -36.7753095,
+    "longitude": 174.5546604
+  },
+  {
+    "name": "Honiara",
+    "latitude": -9.4310769,
+    "longitude": 159.9552552
+  },
+  {
+    "name": "Omaha",
+    "latitude": -36.3399886,
+    "longitude": 174.7747859
+  },
+  {
+    "name": "Sorong",
+    "latitude": -0.8634105,
+    "longitude": 131.2544805
+  },
+  {
+    "name": "Bellbrae",
+    "latitude": -38.3308213,
+    "longitude": 144.2620821
+  },
+  {
+    "name": "Huntly",
+    "latitude": -37.5583996,
+    "longitude": 175.1588322
+  },
+  {
+    "name": "Adelaide",
+    "latitude": -34.9281805,
+    "longitude": 138.5999312
+  },
+  {
+    "name": "Paerata",
+    "latitude": -37.1666782,
+    "longitude": 174.8950857
+  },
+  {
+    "name": "Invercargill",
+    "latitude": -46.4118465,
+    "longitude": 168.3470632
+  },
+  {
+    "name": "Oban",
+    "latitude": -46.8979908,
+    "longitude": 168.1283778
+  },
+  {
+    "name": "Bluff",
+    "latitude": -46.59882,
+    "longitude": 168.3433685
+  },
+  {
+    "name": "Riverton",
+    "latitude": -46.3509977,
+    "longitude": 168.0202689
+  },
+  {
+    "name": "Ngongotaha",
+    "latitude": -38.0773722,
+    "longitude": 176.211515
+  },
+  {
+    "name": "London",
+    "latitude": 1.9836447,
+    "longitude": -157.476202
+  },
+  {
+    "name": "Patea",
+    "latitude": -39.7568612,
+    "longitude": 174.4751722
+  },
+  {
+    "name": "Paremoremo",
+    "latitude": -36.7532504,
+    "longitude": 174.6483481
+  },
+  {
+    "name": "Dunedin",
+    "latitude": -45.8740984,
+    "longitude": 170.5035755
+  },
+  {
+    "name": "Pokeno",
+    "latitude": -37.244824,
+    "longitude": 175.0219505
+  },
+  {
+    "name": "Ohaeawai",
+    "latitude": -35.3518338,
+    "longitude": 173.8821805
+  },
+  {
+    "name": "Nuku'alofa",
+    "latitude": -21.1343401,
+    "longitude": -175.201808
+  },
+  {
+    "name": "Ohope",
+    "latitude": -37.9716539,
+    "longitude": 177.0562894
+  },
+  {
+    "name": "Okiwi Bay",
+    "latitude": -41.1120967,
+    "longitude": 173.6581263
+  },
+  {
+    "name": "Waimarama",
+    "latitude": -39.8158277,
+    "longitude": 176.9892201
+  },
+  {
+    "name": "Kaiwaka",
+    "latitude": -36.1612116,
+    "longitude": 174.4435893
+  },
+  {
+    "name": "Atiamuri",
+    "latitude": -38.3927875,
+    "longitude": 176.0293137
+  },
+  {
+    "name": "Te Kopuru",
+    "latitude": -36.0280193,
+    "longitude": 173.9157775
+  },
+  {
+    "name": "Opunake",
+    "latitude": -39.4546624,
+    "longitude": 173.8601616
+  },
+  {
+    "name": "Malanda",
+    "latitude": -17.352837,
+    "longitude": 145.5959372
+  },
+  {
+    "name": "Elliott Heads",
+    "latitude": -24.9184027,
+    "longitude": 152.4910671
+  },
+  {
+    "name": "Waitarere",
+    "latitude": -40.5506895,
+    "longitude": 175.1978162
+  },
+  {
+    "name": "Otaki Beach",
+    "latitude": -40.7411168,
+    "longitude": 175.118709
+  },
+  {
+    "name": "Kaeo",
+    "latitude": -35.100315,
+    "longitude": 173.7799016
+  },
+  {
+    "name": "Wewak",
+    "latitude": -3.5542197,
+    "longitude": 143.6270904
+  },
+  {
+    "name": "Brisbane",
+    "latitude": -27.4689682,
+    "longitude": 153.0234991
+  },
+  {
+    "name": "Owhango",
+    "latitude": -38.995956,
+    "longitude": 175.3795371
+  },
+  {
+    "name": "Taneatua",
+    "latitude": -38.0661673,
+    "longitude": 177.0042976
+  },
+  {
+    "name": "Waipu",
+    "latitude": -35.9850068,
+    "longitude": 174.4474971
+  },
+  {
+    "name": "Purakaunui",
+    "latitude": -45.7516247,
+    "longitude": 170.6384044
+  },
+  {
+    "name": "Opaki",
+    "latitude": -40.8950376,
+    "longitude": 175.6617129
+  },
+  {
+    "name": "Ruakaka",
+    "latitude": -35.8754355,
+    "longitude": 174.4557066
+  },
+  {
+    "name": "Kuaotunu",
+    "latitude": -36.7232825,
+    "longitude": 175.7245723
+  },
+  {
+    "name": "Ohura",
+    "latitude": -38.8420351,
+    "longitude": 174.9829083
+  },
+  {
+    "name": "Ngahinapouri",
+    "latitude": -37.8953116,
+    "longitude": 175.2077508
+  },
+  {
+    "name": "Frances",
+    "latitude": -36.7132968,
+    "longitude": 140.9557894
+  },
+  {
+    "name": "Niulakita",
+    "latitude": -10.7900828,
+    "longitude": 179.4709621
+  },
+  {
+    "name": "Okaihau",
+    "latitude": -35.3224555,
+    "longitude": 173.7713829
+  },
+  {
+    "name": "Hukerenui",
+    "latitude": -35.5199143,
+    "longitude": 174.1949969
+  },
+  {
+    "name": "Matakohe",
+    "latitude": -36.1301192,
+    "longitude": 174.1859151
+  },
+  {
+    "name": "Paparoa",
+    "latitude": -36.0999811,
+    "longitude": 174.2347873
+  },
+  {
+    "name": "Wolseley",
+    "latitude": -36.3669082,
+    "longitude": 140.9059009
+  },
+  {
+    "name": "Warwick",
+    "latitude": -28.2163204,
+    "longitude": 152.0327039
+  },
+  {
+    "name": "Griffith",
+    "latitude": -34.2870772,
+    "longitude": 146.0551022
+  },
+  {
+    "name": "Te Karaka",
+    "latitude": -38.4690237,
+    "longitude": 177.8642923
+  },
+  {
+    "name": "Okato",
+    "latitude": -39.1910069,
+    "longitude": 173.8799822
+  },
+  {
+    "name": "Orere Point",
+    "latitude": -36.9589811,
+    "longitude": 175.2431304
+  },
+  {
+    "name": "Pukorokoro / Miranda",
+    "latitude": -37.1830064,
+    "longitude": 175.3042758
+  },
+  {
+    "name": "Pakaraka",
+    "latitude": -39.8216986,
+    "longitude": 174.8634935
+  },
+  {
+    "name": "Ohaupo",
+    "latitude": -37.919078,
+    "longitude": 175.307047
+  },
+  {
+    "name": "Albany",
+    "latitude": -35.0247822,
+    "longitude": 117.883608
+  },
+  {
+    "name": "Waitotara",
+    "latitude": -39.8044726,
+    "longitude": 174.733291
+  },
+  {
+    "name": "Onslow",
+    "latitude": -21.6382467,
+    "longitude": 115.1134438
+  },
+  {
+    "name": "Mantamaru",
+    "latitude": -25.8628678,
+    "longitude": 127.6650639
+  },
+  {
+    "name": "Rockhampton",
+    "latitude": -23.3782137,
+    "longitude": 150.5134227
+  },
+  {
+    "name": "Jayapura",
+    "latitude": -2.5387539,
+    "longitude": 140.7037389
+  },
+  {
+    "name": "Manokwari",
+    "latitude": -0.8614456,
+    "longitude": 134.0767324
+  },
+  {
+    "name": "Flying Fish Cove",
+    "latitude": -10.4213344,
+    "longitude": 105.674413
+  },
+  {
+    "name": "Adamstown",
+    "latitude": -25.066667,
+    "longitude": -130.100205
+  },
+  {
+    "name": "Weipa",
+    "latitude": -12.6386641,
+    "longitude": 141.8710861
+  },
+  {
+    "name": "Kurow",
+    "latitude": -44.7338879,
+    "longitude": 170.4694561
+  },
+  {
+    "name": "Meningie",
+    "latitude": -35.6891286,
+    "longitude": 139.3364722
+  },
+  {
+    "name": "Suva",
+    "latitude": -18.1415884,
+    "longitude": 178.4421662
+  },
+  {
+    "name": "Albury",
+    "latitude": -36.0804766,
+    "longitude": 146.9162795
+  },
+  {
+    "name": "Ohau",
+    "latitude": -40.660964,
+    "longitude": 175.2479784
+  },
+  {
+    "name": "Traralgon",
+    "latitude": -38.1946636,
+    "longitude": 146.5381646
+  },
+  {
+    "name": "Alberton",
+    "latitude": -38.6149923,
+    "longitude": 146.665851
+  },
+  {
+    "name": "Ebeye",
+    "latitude": 8.7841317,
+    "longitude": 167.7369226
+  },
+  {
+    "name": "Riverhead",
+    "latitude": -36.758443,
+    "longitude": 174.5918546
+  },
+  {
+    "name": "Yarram",
+    "latitude": -38.5616717,
+    "longitude": 146.675887
+  },
+  {
+    "name": "Oakura",
+    "latitude": -39.1175295,
+    "longitude": 173.9561133
+  },
+  {
+    "name": "Ocean Grove",
+    "latitude": -38.267045,
+    "longitude": 144.52487
+  },
+  {
+    "name": "Goroka",
+    "latitude": -6.0730028,
+    "longitude": 145.3932891
+  },
+  {
+    "name": "Grafton",
+    "latitude": -29.69125,
+    "longitude": 152.9333435
+  },
+  {
+    "name": "Mangatawhiri",
+    "latitude": -37.2153151,
+    "longitude": 175.121889
+  },
+  {
+    "name": "Ngerulmud",
+    "latitude": 7.5006446,
+    "longitude": 134.6242864
+  },
+  {
+    "name": "Atafu",
+    "latitude": -8.5387728,
+    "longitude": -172.5178146
+  },
+  {
+    "name": "Manutuke",
+    "latitude": -38.6777074,
+    "longitude": 177.9122791
+  },
+  {
+    "name": "Ngataki",
+    "latitude": -34.7413212,
+    "longitude": 173.0454237
+  },
+  {
+    "name": "Biak Kota",
+    "latitude": -1.1836086,
+    "longitude": 136.0816321
+  },
+  {
+    "name": "Bambous Virieux",
+    "latitude": -20.3439274,
+    "longitude": 57.7637829
+  },
+  {
+    "name": "Whangarei Heads",
+    "latitude": -35.8164559,
+    "longitude": 174.5053966
+  },
+  {
+    "name": "Paekakariki Hill",
+    "latitude": -41.0599838,
+    "longitude": 174.9361746
+  },
+  {
+    "name": "Asau",
+    "latitude": -7.4890971,
+    "longitude": 178.679807
+  },
+  {
+    "name": "Omokoroa",
+    "latitude": -37.6634696,
+    "longitude": 176.0416043
+  },
+  {
+    "name": "Sunshine Coast",
+    "latitude": -26.6544338,
+    "longitude": 153.0933668
+  },
+  {
+    "name": "Redland City",
+    "latitude": -27.5263558,
+    "longitude": 153.2666582
+  },
+  {
+    "name": "Jabor",
+    "latitude": 5.921493,
+    "longitude": 169.6427515
+  }
+]

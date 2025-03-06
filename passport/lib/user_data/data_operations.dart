@@ -1,20 +1,24 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:passport/trips/map_manager.dart';
-import 'package:passport/utils/permission_utils.dart';
-import 'package:photo_manager/photo_manager.dart' as photo;
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../classes.dart';
+// lib/user_data/data_operations.dart
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle; // For loading JSON
+import 'dart:convert'; // For jsonDecode
+import 'dart:math' as math; // For haversineDistance
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:photo_manager/photo_manager.dart' as photo_manager;
+import 'package:intl/intl.dart';
 
+import '../trips/map_manager.dart';
+import '../classes.dart';
+import '../utils/permission_utils.dart';
 
-/*
-    ===  Class DataFetcher ===
-    Responsible for retrieving a users data from firebase.
-*/
 class DataFetcher {
   /// Fetch photo metadata stored in Firebase for a given timeframe
   static Future<List<Location>> fetchPhotoMetadataFromFirebase(
-      String userId, DateTimeRange timeframe) async {
+    String userId,
+    DateTimeRange timeframe,
+  ) async {
     final userDoc = FirebaseFirestore.instance.collection('users').doc(userId);
     final snapshot = await userDoc.get();
 
@@ -43,202 +47,153 @@ class DataFetcher {
   }
 }
 
-
-/*
-    ===  Class DataSaver ===
-    Responsible for saving a users data to firebase.
-*/
 class DataSaver {
-      /// Save photo metadata to Firebase
-      static Future<void> savePhotoMetadataToFirebase(
-          String userId, List<Location> photoLocations) async {
-        final userDoc = FirebaseFirestore.instance.collection('users').doc(userId);
+  /// Save photo metadata to Firebase
+  static Future<void> savePhotoMetadataToFirebase(
+    String userId,
+    List<Location> photoLocations,
+  ) async {
+    final userDoc = FirebaseFirestore.instance.collection('users').doc(userId);
 
-        // Prepare data for Firebase
-        List<Map<String, dynamic>> locationData = photoLocations
-            .map((location) => {
-                  'latitude': location.latitude,
-                  'longitude': location.longitude,
-                  'timestamp': location.timestamp,
-                })
-            .toList();
-        print('Saving to Firebase: $locationData');
+    // Prepare data for Firebase
+    List<Map<String, dynamic>> locationData = photoLocations
+        .map((location) => {
+              'latitude': location.latitude,
+              'longitude': location.longitude,
+              'timestamp': location.timestamp,
+            })
+        .toList();
 
-        // Store data in Firestore
-        await userDoc
-            .set({'photoLocations': locationData}, SetOptions(merge: true));
-      }
+    print('Saving to Firebase: $locationData');
 
-      /// Sign up a user and initialize their data
-      static Future<void> signUp(
-
-          {required String email,
-          required String password,
-          required BuildContext context}) async {
-        try {
-          print("=============Signup initiated===============\n\n");
-          // Create user with Firebase Authentication
-          final userCredential =
-              await FirebaseAuth.instance.createUserWithEmailAndPassword(
-            email: email.trim(),
-            password: password.trim(),
-          );
-
-          final userId = userCredential.user?.uid;
-          if (userId == null) {
-            throw Exception('Failed to retrieve user ID.');
-          }
-
-          // Initialize user document in Firestore
-          await FirebaseFirestore.instance.collection('users').doc(userId).set({
-            'email': email,
-            'acceptedTerms': false, // Default value
-          });
-
-          // Request photo permissions
-          bool photoAccessGranted = await PermissionUtils.requestPhotoPermission();
-          if (!photoAccessGranted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Photo access is required to upload your photos.',
-                ),
-              ),
-            );
-            PermissionUtils.openSettingsIfNeeded();
-            return;
-          }
-
-          // Fetch and save photo metadata
-          final List<Location> photoMetadata =
-              await PhotoManager.fetchAllPhotoMetadata();
-          await savePhotoMetadataToFirebase(userId, photoMetadata);
-
-          // Navigate to the Welcome Screen
-          Navigator.pushReplacementNamed(context, '/welcome');
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Signup failed: $e')),
-          );
-        }
-      }
-}
-
-
-/*
-    ===  Class PhotoManager ===
-    Responsible for locally retrieving photo metadata / dealing with permissions
-*/
-class PhotoManager {
-  /// Request photo library access using `photo_manager` and return the state
-  /// Request photo library access using `photo_manager` and return the state
-  static Future<photo.PermissionState> requestPhotoPermission() async {
-    final photo.PermissionState state =
-        await photo.PhotoManager.requestPermissionExtend();
-
-    if (state == photo.PermissionState.authorized) {
-      print('Photo access granted');
-    } else if (state == photo.PermissionState.limited) {
-      print('Photo access granted with limitations');
-    } else {
-      print('Photo access denied');
-    }
-    return state;
+    // Store data in Firestore (merge so we don't overwrite other fields)
+    await userDoc.set({
+      'photoLocations': locationData,
+    }, SetOptions(merge: true));
   }
 
-  /// Handle denied permissions by opening settings only if explicitly requested
-  static Future<void> openSettingsIfNeeded(BuildContext context) async {
-    final photo.PermissionState state = await photo.PhotoManager.requestPermissionExtend();
-    if (state == photo.PermissionState.denied || state == photo.PermissionState.restricted) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Photo Access Required'),
-          content: Text('To continue using the app, please grant photo access.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                photo.PhotoManager.openSetting();
-              },
-              child: Text('Open Settings'),
-            ),
-          ],
-        ),
+  /// Sign up a user and initialize their data
+  static Future<void> signUp({
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
+    try {
+      print("=============Signup initiated===============\n\n");
+
+      // Create user with Firebase Authentication
+      final userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
+
+      final userId = userCredential.user?.uid;
+      if (userId == null) {
+        throw Exception('Failed to retrieve user ID.');
+      }
+
+      // Initialize user document in Firestore
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'email': email,
+        'acceptedTerms': false, // Default value
+      });
+
+      // No photo permissions or metadata saving here.
+      // We simply navigate the user to the next screen.
+      Navigator.pushReplacementNamed(context, '/welcome');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Signup failed: $e')),
       );
     }
   }
+}
 
+/// Responsible for retrieving photo metadata from the device, city lookup, etc.
+class CustomPhotoManager {
+  /// Master list of all known cities. Populated by loadAllCityDatasets().
+  static List<City> allCities = [];
 
-  /// Fetch all photo metadata across the entire device
-  static Future<List<Location>> fetchAllPhotoMetadata() async {
-    final photo.PermissionState state = await requestPhotoPermission();
-    if (!state.hasAccess) {
-      throw Exception('Photo access denied.');
-    }
+  /// Load city data from multiple JSON files
+  static Future<void> loadAllCityDatasets() async {
+    const datasetFiles = [
+      'lib/database/africa.json',
+      'lib/database/asia.json',
+      'lib/database/europe.json',
+      'lib/database/north-america.json',
+      'lib/database/south-america.json',
+      'lib/database/oceania.json',
+      'lib/database/antarctica.json',
+      'lib/database/central-america.json',
+    ];
 
-    // Fetch albums
-    List<photo.AssetPathEntity> albums =
-        await photo.PhotoManager.getAssetPathList(
-      type: photo.RequestType.image,
-    );
+    allCities.clear();
 
-    if (albums.isEmpty) {
-      throw Exception('No photo albums found.');
-    }
+    for (final filePath in datasetFiles) {
+      try {
+        final dataString = await rootBundle.loadString(filePath);
+        final List<dynamic> jsonList = jsonDecode(dataString);
 
-    List<Location> photoLocations = [];
-    for (photo.AssetPathEntity album in albums) {
-      List<photo.AssetEntity> userPhotos =
-          await album.getAssetListPaged(page: 0, size: 500);
+        for (var item in jsonList) {
+          final name = item['name'] as String?;
+          final lat = item['latitude']?.toDouble();
+          final lon = item['longitude']?.toDouble();
 
-      for (photo.AssetEntity photoEntity in userPhotos) {
-        if (photoEntity.latitude != null && photoEntity.longitude != null) {
-          photoLocations.add(Location(
-            latitude: photoEntity.latitude!,
-            longitude: photoEntity.longitude!,
-            timestamp: photoEntity.createDateTime.toIso8601String(),
-          ));
+          if (name == null || lat == null || lon == null) continue;
+
+          allCities.add(City(name: name, latitude: lat, longitude: lon));
         }
+      } catch (e) {
+        print('Error loading $filePath: $e');
       }
     }
 
-    return photoLocations;
+    print('Loaded ${allCities.length} total cities from datasets.');
   }
 
-  /// Show an in-app permission request dialog
-  static void _showPermissionDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Photo Access Required'),
-        content: Text(
-            'This app requires access to your photos to provide location-based tracking. Please allow access.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              photo.PhotoManager.openSetting();
-            },
-            child: Text('Open Settings'),
-          ),
-        ],
-      ),
-    );
+  /// Return the city in [allCities] closest to (lat, lon).
+  static City? findClosestCity(double lat, double lon) {
+    if (allCities.isEmpty) {
+      return null;
+    }
+    City? closestCity;
+    double minDistance = double.infinity;
+
+    for (final city in allCities) {
+      final distance = _haversineDistance(lat, lon, city.latitude, city.longitude);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestCity = city;
+      }
+    }
+    return closestCity;
   }
 
+  static double _haversineDistance(double lat1, double lon1, double lat2, double lon2) {
+    const R = 6371; // Earth in km
+    final dLat = _toRadians(lat2 - lat1);
+    final dLon = _toRadians(lon2 - lon1);
 
-  
-  static Future<void> fetchAndPlotPhotoMetadata(BuildContext context,
-      MapManager mapManager, DateTimeRange timeframe) async {
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_toRadians(lat1)) *
+            math.cos(_toRadians(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
+
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return R * c;
+  }
+
+  static double _toRadians(double deg) => deg * (math.pi / 180.0);
+
+  /// Fetch location data from the device and build + save trips in Firebase.
+  /// Does NOT require the map to be initialized (no pins plotted here).
+  static Future<void> fetchPhotoMetadata({
+    required BuildContext context,
+    required DateTimeRange timeframe,
+  }) async {
+    // 1) Check timeframe
     if (timeframe == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please select a timeframe first.')),
@@ -246,22 +201,30 @@ class PhotoManager {
       return;
     }
 
-    final photo.PermissionState state =
-        await photo.PhotoManager.requestPermissionExtend();
-    print('Photo permission state: $state');
-
+    // 2) Request photo permission
+    final photo_manager.PermissionState state =
+        await photo_manager.PhotoManager.requestPermissionExtend();
     if (!state.isAuth) {
       print('Photo access denied.');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Photo access is required to fetch photos.')),
+        const SnackBar(content: Text('Photo access is required to fetch photos.')),
       );
       return;
     }
 
     try {
-      List<photo.AssetPathEntity> albums =
-          await photo.PhotoManager.getAssetPathList(
-        type: photo.RequestType.image,
+      // 3) Load city datasets (for findClosestCity)
+      await loadAllCityDatasets();
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print("No authenticated user found. Cannot proceed.");
+        return;
+      }
+
+      // 4) Fetch photos from the device
+      final albums = await photo_manager.PhotoManager.getAssetPathList(
+        type: photo_manager.RequestType.image,
       );
 
       if (albums.isEmpty) {
@@ -272,9 +235,8 @@ class PhotoManager {
         return;
       }
 
-      photo.AssetPathEntity recentAlbum = albums[0];
-      List<photo.AssetEntity> userPhotos =
-          await recentAlbum.getAssetListPaged(page: 0, size: 100);
+      final photo_manager.AssetPathEntity firstAlbum = albums[0];
+      final userPhotos = await firstAlbum.getAssetListPaged(page: 0, size: 100);
 
       if (userPhotos.isEmpty) {
         print('No photos found in the album.');
@@ -284,39 +246,178 @@ class PhotoManager {
         return;
       }
 
+      // 5) Build photoLocations by timeframe
       List<Location> photoLocations = [];
       final start = timeframe.start;
       final end = timeframe.end;
 
-      for (photo.AssetEntity photoEntity in userPhotos) {
-        if (photoEntity.latitude != null &&
-            photoEntity.longitude != null &&
-            photoEntity.latitude != 0.0 &&
-            photoEntity.longitude != 0.0 &&
-            photoEntity.createDateTime.isAfter(start) &&
-            photoEntity.createDateTime.isBefore(end)) {
-          photoLocations.add(Location(
-            latitude: photoEntity.latitude!,
-            longitude: photoEntity.longitude!,
-            timestamp: photoEntity.createDateTime.toIso8601String(),
-          ));
-          print(
-              "Fetched photo: ${photoEntity.latitude}, ${photoEntity.longitude}");
-        } else {
-          print(
-              "Skipping invalid photo: ${photoEntity.latitude}, ${photoEntity.longitude}");
+      for (final asset in userPhotos) {
+        final lat = asset.latitude ?? 0.0;
+        final lon = asset.longitude ?? 0.0;
+        final createTime = asset.createDateTime;
+
+        if (lat != 0.0 &&
+            lon != 0.0 &&
+            createTime.isAfter(start) &&
+            createTime.isBefore(end)) {
+          final city = findClosestCity(lat, lon);
+          final cityName = city?.name ?? 'Unknown';
+
+          print("Fetched photo: $lat, $lon  Closest City: $cityName");
+
+          photoLocations.add(
+            Location(
+              latitude: lat,
+              longitude: lon,
+              timestamp: createTime.toIso8601String(),
+            ),
+          );
         }
       }
 
-
       if (photoLocations.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No photos found in the selected timeframe.')),
+          SnackBar(content: Text('No photos found within that timeframe.')),
         );
-      } else {
-        print("Plotting ${photoLocations.length} locations on the map.");
-        mapManager.plotLocationsOnMap(photoLocations);
+        return;
       }
+
+      // 6) Build trips from these photoLocations, now with stops
+      photoLocations.sort((a, b) =>
+          DateTime.parse(a.timestamp).compareTo(DateTime.parse(b.timestamp)));
+
+      final List<Map<String, dynamic>> trips = [];
+      Map<String, dynamic>? currentTrip;
+      final int dayGap = 7;
+      DateTime? lastPhotoTime;
+
+      // Variables for tracking stops
+      City? currentCity;
+      DateTime? stopStartTime;
+      List<Map<String, dynamic>> currentStops = [];
+
+      for (int i = 0; i < photoLocations.length; i++) {
+        final loc = photoLocations[i];
+        final thisPhotoTime = DateTime.parse(loc.timestamp);
+        final thisCity = findClosestCity(loc.latitude, loc.longitude);
+
+        if (currentTrip == null) {
+          // Start first trip
+          currentTrip = {
+            'id': _generateTripId(),
+            'title': thisCity?.name ?? 'Unknown',
+            'timeframe': {
+              'start': loc.timestamp,
+              'end': loc.timestamp,
+            },
+            'stops': [],
+          };
+          currentCity = thisCity;
+          stopStartTime = thisPhotoTime;
+          lastPhotoTime = thisPhotoTime;
+        } else {
+          final difference = thisPhotoTime.difference(lastPhotoTime!).inDays;
+          
+          if (difference.abs() <= dayGap) {
+            // Same trip
+            currentTrip['timeframe']['end'] = loc.timestamp;
+
+            // Check if location has changed
+            if (thisCity?.name != currentCity?.name) {
+              // Save the previous stop
+              if (currentCity != null && stopStartTime != null) {
+                currentStops.add({
+                  'city': currentCity.name,
+                  'latitude': currentCity.latitude,
+                  'longitude': currentCity.longitude,
+                  'timeframe': {
+                    'start': stopStartTime.toIso8601String(),
+                    'end': lastPhotoTime.toIso8601String(),
+                  },
+                });
+              }
+              // Start new stop
+              currentCity = thisCity;
+              stopStartTime = thisPhotoTime;
+            }
+          } else {
+            // End current trip
+            // Add final stop to current trip
+            if (currentCity != null && stopStartTime != null) {
+              currentStops.add({
+                'city': currentCity.name,
+                'latitude': currentCity.latitude,
+                'longitude': currentCity.longitude,
+                'timeframe': {
+                  'start': stopStartTime.toIso8601String(),
+                  'end': lastPhotoTime!.toIso8601String(),
+                },
+              });
+            }
+            
+            // Update trip title based on stops
+            if (currentStops.length == 1) {
+              currentTrip['title'] = currentStops[0]['city'];
+            } else if (currentStops.length == 2) {
+              currentTrip['title'] = '${currentStops.first['city']} and ${currentStops.last['city']}';
+            } else if (currentStops.length > 2) {
+              currentTrip['title'] = '${currentStops.first['city']} to ${currentStops.last['city']}';
+            }
+            
+            currentTrip['stops'] = currentStops;
+            trips.add(currentTrip);
+
+            // Start new trip
+            currentTrip = {
+              'id': _generateTripId(),
+              'title': thisCity?.name ?? 'Unknown',
+              'timeframe': {
+                'start': loc.timestamp,
+                'end': loc.timestamp,
+              },
+              'stops': [],
+            };
+            currentStops = [];
+            currentCity = thisCity;
+            stopStartTime = thisPhotoTime;
+          }
+          lastPhotoTime = thisPhotoTime;
+        }
+      }
+
+      // Add the final stop and trip
+      if (currentTrip != null && currentCity != null && stopStartTime != null) {
+        currentStops.add({
+          'city': currentCity.name,
+          'latitude': currentCity.latitude,
+          'longitude': currentCity.longitude,
+          'timeframe': {
+            'start': stopStartTime.toIso8601String(),
+            'end': lastPhotoTime!.toIso8601String(),
+          },
+        });
+        
+        // Update final trip title
+        if (currentStops.length == 1) {
+          currentTrip['title'] = currentStops[0]['city'];
+        } else if (currentStops.length == 2) {
+          currentTrip['title'] = '${currentStops.first['city']} and ${currentStops.last['city']}';
+        } else if (currentStops.length > 2) {
+          currentTrip['title'] = '${currentStops.first['city']} to ${currentStops.last['city']}';
+        }
+        
+        currentTrip['stops'] = currentStops;
+        trips.add(currentTrip);
+      }
+
+      print("Created ${trips.length} trips with stops from device photos.");
+
+      // 7) Save trips to Firebase
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'trips': trips,
+      }, SetOptions(merge: true));
+
+      print("Trips saved to 'users/{uid}/trips'.");
     } catch (e) {
       print('Error fetching photo metadata: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -325,4 +426,102 @@ class PhotoManager {
     }
   }
 
+  /// Plot existing trips from Firebase onto the map.
+  /// Requires the map to be initialized, but does NOT read from the device.
+  static Future<void> plotPhotoMetadata({
+    required BuildContext context,
+    required MapManager mapManager,
+  }) async {
+    if (!mapManager.isInitialized) {
+      print('Map is not initialized; cannot plot pins.');
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print("No authenticated user found.");
+      return;
+    }
+
+    try {
+      final userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (!userDoc.exists) {
+        print("User doc doesn't exist, no trips to plot.");
+        return;
+      }
+
+      final List<dynamic> tripsData = userDoc.data()?['trips'] ?? [];
+      if (tripsData.isEmpty) {
+        print('No trips found to plot.');
+        return;
+      }
+
+      List<Location> allLocations = [];
+      for (final trip in tripsData) {
+        final stops = trip['stops'] ?? [];
+        for (final stop in stops) {
+          allLocations.add(Location(
+            latitude: stop['latitude'],
+            longitude: stop['longitude'],
+            timestamp: stop['timeframe']['start'], // Use start time of the stop
+          ));
+        }
+      }
+
+      if (allLocations.isEmpty) {
+        print('No stops found in the stored trips.');
+        return;
+      }
+
+      // Clear existing pins and plot all locations at once
+      await mapManager.clearAllPins();
+      print("Cleared existing pins before plotting.");
+      
+      print("Plotting ${allLocations.length} locations...");
+      await mapManager.plotLocationsOnMap(allLocations);
+    } catch (e) {
+      print('Error plotting trips: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error plotting photo metadata.')),
+        );
+      }
+    }
+  }
+
+  /// Generate random ID like "#a1b2c"
+  static String _generateTripId() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final rnd = math.Random();
+    final sb = StringBuffer('#');
+    for (int i = 0; i < 5; i++) {
+      sb.write(chars[rnd.nextInt(chars.length)]);
+    }
+    return sb.toString();
+  }
+
+  /// Open app settings to grant photo access
+  static Future<void> openSettingsIfNeeded(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Photo Access Required'),
+        content: const Text('To continue using the app, please grant photo access.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              photo_manager.PhotoManager.openSetting();
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+  }
 }
