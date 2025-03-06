@@ -34,75 +34,74 @@ class _TripDetailViewState extends State<TripDetailView> {
   Widget build(BuildContext context) {
     final title = widget.trip['title'] ?? 'Untitled Trip';
     final startIso = widget.trip['timeframe']?['start'] ?? '';
-    final endIso   = widget.trip['timeframe']?['end']   ?? '';
+    final endIso = widget.trip['timeframe']?['end'] ?? '';
     final dateDisplay = (startIso.isNotEmpty && endIso.isNotEmpty)
         ? "${_formatFriendlyDate(startIso)} - ${_formatFriendlyDate(endIso)}"
         : "Unknown Date";
 
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _stopsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return _buildErrorContent(snapshot.error.toString());
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildNoStopsContent(title, dateDisplay);
-        }
+    final stops = widget.trip['stops'] as List<dynamic>? ?? [];
 
-        final stops = snapshot.data!;
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // Back button and title
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: widget.onBack,
-                  ),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                "Trip Dates:",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              _buildDateHeader(),
-              const SizedBox(height: 24),
-              // Display stops as a list, showing only the city name and the friendly date.
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: stops.length,
-                itemBuilder: (context, index) {
-                  final stop = stops[index];
-                  final placeName = stop['placeName'] ?? 'Unknown';
-                  final stopTime = stop['timestamp'];
-
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        child: Text('${index + 1}'),
-                      ),
-                      title: Text(placeName),
-                      subtitle: Text(_formatFriendlyDate(stopTime)),
-                    ),
-                  );
-                },
-              ),
-            ],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // Title only
+          Text(
+            title,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-        );
-      },
+          const SizedBox(height: 16),
+          const Text(
+            "Trip Dates:",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          Text(dateDisplay),
+          const SizedBox(height: 24),
+          const Text(
+            "Stops:",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          // Display stops as a list
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: stops.length,
+            itemBuilder: (context, index) {
+              final stop = stops[index];
+              final city = stop['city'] ?? 'Unknown';
+              final startTime = stop['timeframe']?['start'] ?? '';
+              final endTime = stop['timeframe']?['end'] ?? '';
+              
+              // Format dates
+              final startDate = _formatFriendlyDate(startTime);
+              final endDate = _formatFriendlyDate(endTime);
+              final dateDisplay = startDate == endDate 
+                  ? startDate 
+                  : '$startDate - $endDate';
+              
+              final duration = _calculateDuration(startTime, endTime);
+
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8.0),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    child: Text('${index + 1}'),
+                  ),
+                  title: Text(city),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(dateDisplay),
+                      if (duration.isNotEmpty) Text(duration),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -182,19 +181,9 @@ Future<String> _fetchPlaceName(double latitude, double longitude) async {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: widget.onBack,
-              ),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
+          Text(
+            title,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           const Text(
@@ -257,6 +246,32 @@ Future<String> _fetchPlaceName(double latitude, double longitude) async {
         return 'rd';
       default:
         return 'th';
+    }
+  }
+
+  String _calculateDuration(String start, String end) {
+    try {
+      final startDate = DateTime.parse(start);
+      final endDate = DateTime.parse(end);
+      final difference = endDate.difference(startDate);
+      
+      if (difference.inDays > 1) {
+        return '${difference.inDays} days';
+      } else if (difference.inDays == 1) {
+        return '1 day';
+      } else if (difference.inHours > 1) {
+        return '${difference.inHours} hours';
+      } else if (difference.inHours == 1) {
+        return '1 hour';
+      } else if (difference.inMinutes > 1) {
+        return '${difference.inMinutes} minutes';
+      } else if (difference.inMinutes == 1) {
+        return '1 minute';
+      } else {
+        return '';
+      }
+    } catch (e) {
+      return '';
     }
   }
 }

@@ -429,7 +429,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                 },
                 child: Text("Select"),
               ),
-            if (isEditingTrip || isCreatingTrip)
+            if (isEditingTrip || isCreatingTrip || isViewingTrip)
               IconButton(
                 icon: Icon(Icons.close),
                 onPressed: () {
@@ -445,6 +445,9 @@ class _MyTripsSectionState extends State<MyTripsSection> {
                       editingTripId = null;
                       titleController.clear();
                       timeframe = null;
+                    }
+                    if (isViewingTrip) {
+                      isViewingTrip = false;
                     }
                     currentChildSize = 0.25;
                   });
