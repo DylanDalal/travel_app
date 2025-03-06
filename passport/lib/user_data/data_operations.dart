@@ -282,7 +282,7 @@ class CustomPhotoManager {
         return;
       }
 
-      // 6) Build trips from these photoLocations
+      // 6) Build trips from these photoLocations, now with stops
       photoLocations.sort((a, b) =>
           DateTime.parse(a.timestamp).compareTo(DateTime.parse(b.timestamp)));
 
@@ -291,88 +291,126 @@ class CustomPhotoManager {
       final int dayGap = 7;
       DateTime? lastPhotoTime;
 
+      // Variables for tracking stops
+      City? currentCity;
+      DateTime? stopStartTime;
+      List<Map<String, dynamic>> currentStops = [];
+
       for (int i = 0; i < photoLocations.length; i++) {
         final loc = photoLocations[i];
         final thisPhotoTime = DateTime.parse(loc.timestamp);
+        final thisCity = findClosestCity(loc.latitude, loc.longitude);
 
         if (currentTrip == null) {
-          final firstCity = findClosestCity(loc.latitude, loc.longitude);
-          final firstCityName = firstCity?.name ?? 'Unknown';
-
+          // Start first trip
           currentTrip = {
             'id': _generateTripId(),
-            'title': firstCityName, // Initial title with just first city
+            'title': thisCity?.name ?? 'Unknown',
             'timeframe': {
               'start': loc.timestamp,
               'end': loc.timestamp,
             },
-            'locations': [
-              {
-                'latitude': loc.latitude,
-                'longitude': loc.longitude,
-                'timestamp': loc.timestamp,
-              }
-            ],
+            'stops': [],
           };
+          currentCity = thisCity;
+          stopStartTime = thisPhotoTime;
           lastPhotoTime = thisPhotoTime;
         } else {
           final difference = thisPhotoTime.difference(lastPhotoTime!).inDays;
+          
           if (difference.abs() <= dayGap) {
             // Same trip
-            currentTrip['locations'].add({
-              'latitude': loc.latitude,
-              'longitude': loc.longitude,
-              'timestamp': loc.timestamp,
-            });
             currentTrip['timeframe']['end'] = loc.timestamp;
 
-            // Update title based on number of locations
-            final locations = currentTrip['locations'] as List;
-            if (locations.length == 2) {
-              // For exactly 2 locations: "City1 and City2"
-              final firstLoc = locations.first;
-              final lastLoc = locations.last;
-              final firstCity = findClosestCity(firstLoc['latitude'], firstLoc['longitude']);
-              final lastCity = findClosestCity(lastLoc['latitude'], lastLoc['longitude']);
-              currentTrip['title'] = '${firstCity?.name ?? "Unknown"} and ${lastCity?.name ?? "Unknown"}';
-            } else if (locations.length > 2) {
-              // For 3+ locations: "City1 to CityN"
-              final firstLoc = locations.first;
-              final lastLoc = locations.last;
-              final firstCity = findClosestCity(firstLoc['latitude'], firstLoc['longitude']);
-              final lastCity = findClosestCity(lastLoc['latitude'], lastLoc['longitude']);
-              currentTrip['title'] = '${firstCity?.name ?? "Unknown"} to ${lastCity?.name ?? "Unknown"}';
+            // Check if location has changed
+            if (thisCity?.name != currentCity?.name) {
+              // Save the previous stop
+              if (currentCity != null && stopStartTime != null) {
+                currentStops.add({
+                  'city': currentCity.name,
+                  'latitude': currentCity.latitude,
+                  'longitude': currentCity.longitude,
+                  'timeframe': {
+                    'start': stopStartTime.toIso8601String(),
+                    'end': lastPhotoTime.toIso8601String(),
+                  },
+                });
+              }
+              // Start new stop
+              currentCity = thisCity;
+              stopStartTime = thisPhotoTime;
             }
           } else {
-            // Start new trip
+            // End current trip
+            // Add final stop to current trip
+            if (currentCity != null && stopStartTime != null) {
+              currentStops.add({
+                'city': currentCity.name,
+                'latitude': currentCity.latitude,
+                'longitude': currentCity.longitude,
+                'timeframe': {
+                  'start': stopStartTime.toIso8601String(),
+                  'end': lastPhotoTime!.toIso8601String(),
+                },
+              });
+            }
+            
+            // Update trip title based on stops
+            if (currentStops.length == 1) {
+              currentTrip['title'] = currentStops[0]['city'];
+            } else if (currentStops.length == 2) {
+              currentTrip['title'] = '${currentStops.first['city']} and ${currentStops.last['city']}';
+            } else if (currentStops.length > 2) {
+              currentTrip['title'] = '${currentStops.first['city']} to ${currentStops.last['city']}';
+            }
+            
+            currentTrip['stops'] = currentStops;
             trips.add(currentTrip);
-            final city = findClosestCity(loc.latitude, loc.longitude);
-            final cityName = city?.name ?? 'Unknown';
 
+            // Start new trip
             currentTrip = {
               'id': _generateTripId(),
-              'title': cityName,
+              'title': thisCity?.name ?? 'Unknown',
               'timeframe': {
                 'start': loc.timestamp,
                 'end': loc.timestamp,
               },
-              'locations': [
-                {
-                  'latitude': loc.latitude,
-                  'longitude': loc.longitude,
-                  'timestamp': loc.timestamp,
-                }
-              ],
+              'stops': [],
             };
+            currentStops = [];
+            currentCity = thisCity;
+            stopStartTime = thisPhotoTime;
           }
           lastPhotoTime = thisPhotoTime;
         }
       }
-      if (currentTrip != null) {
+
+      // Add the final stop and trip
+      if (currentTrip != null && currentCity != null && stopStartTime != null) {
+        currentStops.add({
+          'city': currentCity.name,
+          'latitude': currentCity.latitude,
+          'longitude': currentCity.longitude,
+          'timeframe': {
+            'start': stopStartTime.toIso8601String(),
+            'end': lastPhotoTime!.toIso8601String(),
+          },
+        });
+        
+        // Update final trip title
+        if (currentStops.length == 1) {
+          currentTrip['title'] = currentStops[0]['city'];
+        } else if (currentStops.length == 2) {
+          currentTrip['title'] = '${currentStops.first['city']} and ${currentStops.last['city']}';
+        } else if (currentStops.length > 2) {
+          currentTrip['title'] = '${currentStops.first['city']} to ${currentStops.last['city']}';
+        }
+        
+        currentTrip['stops'] = currentStops;
         trips.add(currentTrip);
       }
 
-      print("Created ${trips.length} trips from device photos.");
+      print("Created ${trips.length} trips with stops from device photos.");
 
       // 7) Save trips to Firebase
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
@@ -421,18 +459,18 @@ class CustomPhotoManager {
 
       List<Location> allLocations = [];
       for (final trip in tripsData) {
-        final locs = trip['locations'] ?? [];
-        for (final loc in locs) {
+        final stops = trip['stops'] ?? [];
+        for (final stop in stops) {
           allLocations.add(Location(
-            latitude: loc['latitude'],
-            longitude: loc['longitude'],
-            timestamp: loc['timestamp'],
+            latitude: stop['latitude'],
+            longitude: stop['longitude'],
+            timestamp: stop['timeframe']['start'], // Use start time of the stop
           ));
         }
       }
 
       if (allLocations.isEmpty) {
-        print('No photo locations in the stored trips.');
+        print('No stops found in the stored trips.');
         return;
       }
 
