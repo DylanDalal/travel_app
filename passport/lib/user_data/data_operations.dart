@@ -251,6 +251,8 @@ class CustomPhotoManager {
       final start = timeframe.start;
       final end = timeframe.end;
 
+      City? previousCity; // Track the previous photo's closest city
+
       for (final asset in userPhotos) {
         final lat = asset.latitude ?? 0.0;
         final lon = asset.longitude ?? 0.0;
@@ -261,8 +263,15 @@ class CustomPhotoManager {
             createTime.isAfter(start) &&
             createTime.isBefore(end)) {
           final city = findClosestCity(lat, lon);
-          final cityName = city?.name ?? 'Unknown';
 
+          // Check if the current photo's closest city is the same as the previous one
+          if (city?.name == previousCity?.name) {
+            // TODO: Maintain how much time was spent in the city
+            print("Skipping photo in same city: ${city?.name}");
+            continue;
+          }
+
+          final cityName = city?.name ?? 'Unknown';
           print("Fetched photo: $lat, $lon  Closest City: $cityName");
 
           photoLocations.add(
@@ -272,6 +281,8 @@ class CustomPhotoManager {
               timestamp: createTime.toIso8601String(),
             ),
           );
+
+          previousCity = city; // Update the previous city
         }
       }
 
@@ -283,6 +294,7 @@ class CustomPhotoManager {
       }
 
       // 6) Build trips from these photoLocations, now with stops
+      // TODO: FIGURE OUT HOW WE CAN DO THIS WITHOUT SORTING BY TIMESTAMP
       photoLocations.sort((a, b) =>
           DateTime.parse(a.timestamp).compareTo(DateTime.parse(b.timestamp)));
 
