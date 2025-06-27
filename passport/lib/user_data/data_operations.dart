@@ -225,23 +225,33 @@ class CustomPhotoManager {
       // 4) Fetch photos from the device
       final albums = await photo_manager.PhotoManager.getAssetPathList(
         type: photo_manager.RequestType.image,
+        onlyAll: true, // Fetch only the main "Library" album across platforms
       );
 
       if (albums.isEmpty) {
-        print('No photo albums found.');
+        print('Main photos album not found.');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No photo albums found.')),
+          SnackBar(content: Text('Main photos album not found.')),
         );
         return;
       }
 
-      final photo_manager.AssetPathEntity firstAlbum = albums[0];
-      final userPhotos = await firstAlbum.getAssetListPaged(page: 0, size: 100);
+      // Gather every photo from the main album by paging through all assets
+      final mainAlbum = albums.first;
+      List<photo_manager.AssetEntity> userPhotos = [];
+      const int pageSize = 100;
+      int page = 0;
+      while (true) {
+        final assets = await mainAlbum.getAssetListPaged(page: page, size: pageSize);
+        if (assets.isEmpty) break;
+        userPhotos.addAll(assets);
+        page++;
+      }
 
       if (userPhotos.isEmpty) {
-        print('No photos found in the album.');
+        print('No photos found in the main album.');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No photos found in the album.')),
+          SnackBar(content: Text('No photos found in the main album.')),
         );
         return;
       }
