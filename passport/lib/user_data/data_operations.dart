@@ -222,6 +222,13 @@ class CustomPhotoManager {
         return;
       }
 
+      final userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final List<String> hometowns =
+          (userDoc.data()?['hometowns'] as List<dynamic>? ?? [])
+              .map((e) => e.toString())
+              .toList();
+
       // 4) Fetch photos from the device
       final albums = await photo_manager.PhotoManager.getAssetPathList(
         type: photo_manager.RequestType.image,
@@ -246,7 +253,7 @@ class CustomPhotoManager {
         return;
       }
 
-      // 5) Build photoLocations by timeframe
+      // 5) Build photo locations by timeframe
       List<Location> photoLocations = [];
       final start = timeframe.start;
       final end = timeframe.end;
@@ -270,6 +277,7 @@ class CustomPhotoManager {
               latitude: lat,
               longitude: lon,
               timestamp: createTime.toIso8601String(),
+              city: city,
             ),
           );
         }
@@ -288,7 +296,7 @@ class CustomPhotoManager {
 
       final List<Map<String, dynamic>> trips = [];
       Map<String, dynamic>? currentTrip;
-      final int dayGap = 7;
+      final int dayGap = 3;
       DateTime? lastPhotoTime;
 
       // Variables for tracking stops
@@ -296,13 +304,53 @@ class CustomPhotoManager {
       DateTime? stopStartTime;
       List<Map<String, dynamic>> currentStops = [];
 
+      void finalizeTrip() {
+        if (currentTrip != null && currentCity != null && stopStartTime != null) {
+          currentStops.add({
+            'city': currentCity!.name,
+            'latitude': currentCity!.latitude,
+            'longitude': currentCity!.longitude,
+            'timeframe': {
+              'start': stopStartTime!.toIso8601String(),
+              'end': lastPhotoTime!.toIso8601String(),
+            },
+          });
+
+          if (currentStops.length == 1) {
+            currentTrip!['title'] = currentStops[0]['city'];
+          } else if (currentStops.length == 2) {
+            currentTrip!['title'] =
+                '${currentStops.first['city']} and ${currentStops.last['city']}';
+          } else if (currentStops.length > 2) {
+            currentTrip!['title'] =
+                '${currentStops.first['city']} to ${currentStops.last['city']}';
+          }
+
+          currentTrip!['stops'] = currentStops;
+          trips.add(currentTrip!);
+        }
+      }
+
       for (int i = 0; i < photoLocations.length; i++) {
         final loc = photoLocations[i];
         final thisPhotoTime = DateTime.parse(loc.timestamp);
-        final thisCity = findClosestCity(loc.latitude, loc.longitude);
+        final thisCity = loc.city;
+        final bool isHometown = thisCity != null && hometowns.any(
+            (h) => h.toLowerCase().startsWith(thisCity.name.toLowerCase()));
+
+        if (isHometown) {
+          if (currentTrip != null) {
+            finalizeTrip();
+            currentTrip = null;
+            currentStops = [];
+          }
+          currentCity = null;
+          stopStartTime = null;
+          lastPhotoTime = null;
+          continue;
+        }
 
         if (currentTrip == null) {
-          // Start first trip
           currentTrip = {
             'id': _generateTripId(),
             'title': thisCity?.name ?? 'Unknown',
@@ -314,60 +362,14 @@ class CustomPhotoManager {
           };
           currentCity = thisCity;
           stopStartTime = thisPhotoTime;
-          lastPhotoTime = thisPhotoTime;
         } else {
-          final difference = thisPhotoTime.difference(lastPhotoTime!).inDays;
-          
-          if (difference.abs() <= dayGap) {
-            // Same trip
-            currentTrip['timeframe']['end'] = loc.timestamp;
+          final difference = lastPhotoTime == null
+              ? 0
+              : thisPhotoTime.difference(lastPhotoTime!).inDays;
 
-            // Check if location has changed
-            if (thisCity?.name != currentCity?.name) {
-              // Save the previous stop
-              if (currentCity != null && stopStartTime != null) {
-                currentStops.add({
-                  'city': currentCity.name,
-                  'latitude': currentCity.latitude,
-                  'longitude': currentCity.longitude,
-                  'timeframe': {
-                    'start': stopStartTime.toIso8601String(),
-                    'end': lastPhotoTime.toIso8601String(),
-                  },
-                });
-              }
-              // Start new stop
-              currentCity = thisCity;
-              stopStartTime = thisPhotoTime;
-            }
-          } else {
-            // End current trip
-            // Add final stop to current trip
-            if (currentCity != null && stopStartTime != null) {
-              currentStops.add({
-                'city': currentCity.name,
-                'latitude': currentCity.latitude,
-                'longitude': currentCity.longitude,
-                'timeframe': {
-                  'start': stopStartTime.toIso8601String(),
-                  'end': lastPhotoTime!.toIso8601String(),
-                },
-              });
-            }
-            
-            // Update trip title based on stops
-            if (currentStops.length == 1) {
-              currentTrip['title'] = currentStops[0]['city'];
-            } else if (currentStops.length == 2) {
-              currentTrip['title'] = '${currentStops.first['city']} and ${currentStops.last['city']}';
-            } else if (currentStops.length > 2) {
-              currentTrip['title'] = '${currentStops.first['city']} to ${currentStops.last['city']}';
-            }
-            
-            currentTrip['stops'] = currentStops;
-            trips.add(currentTrip);
+          if (difference.abs() > dayGap) {
+            finalizeTrip();
 
-            // Start new trip
             currentTrip = {
               'id': _generateTripId(),
               'title': thisCity?.name ?? 'Unknown',
@@ -380,35 +382,31 @@ class CustomPhotoManager {
             currentStops = [];
             currentCity = thisCity;
             stopStartTime = thisPhotoTime;
+          } else {
+            currentTrip!['timeframe']['end'] = loc.timestamp;
+
+            if (thisCity?.name != currentCity?.name) {
+              if (currentCity != null && stopStartTime != null) {
+                currentStops.add({
+                  'city': currentCity!.name,
+                  'latitude': currentCity!.latitude,
+                  'longitude': currentCity!.longitude,
+                  'timeframe': {
+                    'start': stopStartTime!.toIso8601String(),
+                    'end': lastPhotoTime!.toIso8601String(),
+                  },
+                });
+              }
+              currentCity = thisCity;
+              stopStartTime = thisPhotoTime;
+            }
           }
-          lastPhotoTime = thisPhotoTime;
         }
+        lastPhotoTime = thisPhotoTime;
       }
 
       // Add the final stop and trip
-      if (currentTrip != null && currentCity != null && stopStartTime != null) {
-        currentStops.add({
-          'city': currentCity.name,
-          'latitude': currentCity.latitude,
-          'longitude': currentCity.longitude,
-          'timeframe': {
-            'start': stopStartTime.toIso8601String(),
-            'end': lastPhotoTime!.toIso8601String(),
-          },
-        });
-        
-        // Update final trip title
-        if (currentStops.length == 1) {
-          currentTrip['title'] = currentStops[0]['city'];
-        } else if (currentStops.length == 2) {
-          currentTrip['title'] = '${currentStops.first['city']} and ${currentStops.last['city']}';
-        } else if (currentStops.length > 2) {
-          currentTrip['title'] = '${currentStops.first['city']} to ${currentStops.last['city']}';
-        }
-        
-        currentTrip['stops'] = currentStops;
-        trips.add(currentTrip);
-      }
+      finalizeTrip();
 
       print("Created ${trips.length} trips with stops from device photos.");
 
