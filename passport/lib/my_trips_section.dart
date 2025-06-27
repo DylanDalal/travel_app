@@ -51,6 +51,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
 
   late MapManager mapManager;
   bool isMapInitialized = false;
+  final Key _mapKey = UniqueKey();
 
   @override
   void initState() {
@@ -310,7 +311,7 @@ class _MyTripsSectionState extends State<MyTripsSection> {
     return Stack(
       children: [
         MapWidget(
-          key: const ValueKey('unique_map_widget'),
+          key: _mapKey,
           cameraOptions: CameraOptions(
             center: Point(coordinates: Position(0, 0)),
             zoom: 2.0,
