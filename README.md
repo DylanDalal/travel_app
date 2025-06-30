@@ -1,5 +1,6 @@
 # travel_app
 
+Passport is a travel application for users to keep track of their past trips, ranking what they liked and didn't, so that they can share it with friends and reference this information in future trips. Passport offers AI trip planning services and direct booking of events, hotels and excursions, all powered by a users' shared data.
 
 follow this guide:
 
