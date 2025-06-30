@@ -2,13 +2,15 @@
 
 Passport is a travel application for users to keep track of their past trips, ranking what they liked and didn't, so that they can share it with friends and reference this information in future trips. Passport offers AI trip planning services and direct booking of events, hotels and excursions, all powered by a users' shared data.
 
-follow this guide:
+
+## **INSTALLATION**
+Follow this guide:
 
 https://docs.flutter.dev/get-started/install
 
-# Feature Requests
+# **Feature Requests**
 
-## **Core Functionalities**
+# Core Functionalities
 - **Photo and Video Management**
   - Place pins on the map for any media captured on the user's phone (problems will arise with prior phones, etc.).
   - Establish trips based on multiple-day-long photo sessions a certain distance from the user's home.
