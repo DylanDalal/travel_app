@@ -74,14 +74,23 @@ class PhotoTripService {
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
       );
-    } else if (photo.PermissionState.limited == photo.PermissionState.limited) {
-      print('Photo access is limited.');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Limited access granted, some photos may be missing.')),
-      );
     } else {
-      print('Photo access denied');
-      _showPermissionDialog(context);
+      // Check if the user granted limited access rather than fully denying the
+      // permission. `requestPhotoPermission` only returns a boolean so we need
+      // to query the current permission state again.
+      final photo.PermissionState state =
+          await photo.PhotoManager.requestPermissionExtend();
+      if (state == photo.PermissionState.limited) {
+        print('Photo access is limited.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('Limited access granted, some photos may be missing.')),
+        );
+      } else {
+        print('Photo access denied');
+        _showPermissionDialog(context);
+      }
     }
   }
 
